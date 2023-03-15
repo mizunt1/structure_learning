@@ -2,7 +2,7 @@
 
 This is a repository that includes several Bayesian structure learning methods, data generation from linear Gaussian DAGs, and several metrics to compare their efficacy. 
 
-
+To get set up: 
 ```
 python -m venv venv
 source venv/bin/activate
