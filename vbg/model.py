@@ -29,15 +29,8 @@ class Model:
         self.edge_params = None
 
     def train(self, data, rng, num_samples_posterior,
-              num_variables, seed, model_obs_noise,
-              batch_size=32, num_iterations=20, lr=1e-5,
-              num_vb_updates=2000, weight=0.1,
-              delta=1, prefill=1000, num_envs=8,
-              update_target_every=1000, n_step=1,
-              replay_capacity=100_000, replay_prioritized=False,
-              min_exploration=0.1, start_to_increase_eps=0.1, num_workers=4,
-              mp_context='spawn', use_erdos_prior=False, keep_epsilon_constant=False):
-
+              num_variables, seed, model_obs_noise, args):
+        
         self.num_samples_posterior = num_samples_posterior
         scorer_cls = BGeScore
         env_kwargs = dict()
@@ -48,33 +41,33 @@ class Model:
         }
 
         env = GFlowNetDAGEnv(
-            num_envs=num_envs,
+            num_envs=args.num_envs,
             scorer=scorer_cls(data, **scorer_kwargs),
-            num_workers=num_workers,
-            context=mp_context,
+            num_workers=args.num_workers,
+            context=args.mp_context,
             vb=True,
             **env_kwargs
         )
 
         env_post = GFlowNetDAGEnv(
-            num_envs=num_envs,
+            num_envs=args.num_envs,
             scorer=scorer_cls(data, **scorer_kwargs),
-            num_workers=num_workers,
-            context=mp_context,
+            num_workers=args.num_workers,
+            context=args.mp_context,
             vb=True,
             **env_kwargs
         )
 
         # Create the replay buffer
         replay = ReplayBuffer(
-            replay_capacity,
+            args.replay_capacity,
             num_variables=env.num_variables,
-            n_step=n_step,
-            prioritized=replay_prioritized
+            n_step=args.n_step,
+            prioritized=args.replay_prioritized
         )
 
         # Create the GFlowNet & initialize parameters
-        scheduler = optax.piecewise_constant_schedule(lr, {
+        scheduler = optax.piecewise_constant_schedule(args.lr, {
             # int(0.4 * args.num_iterations): 0.1,
             # int(0.6 * args.num_iterations): 0.05,
             # int(0.8 * args.num_iterations): 0.01
@@ -83,15 +76,15 @@ class Model:
         key = random.PRNGKey(seed)
         gflownet = GFlowNet(
             optimizer=optax.adam(scheduler),
-            delta=delta,
-            n_step=n_step
+            delta=args.delta,
+            n_step=args.n_step
         )
         params, state = gflownet.init(key, replay.dummy_adjacency)
 
         # Collect data (using random policy) to start filling the replay buffer
         observations = env.reset()
         indices = None
-        for _ in trange(prefill, desc='Collect data'):
+        for _ in trange(args.prefill, desc='Collect data'):
             # Sample random action
             actions, state = get_random_actions(state, observations['mask'])
 
@@ -117,12 +110,11 @@ class Model:
         xtx = jnp.einsum('nk,nl->kl', data.to_numpy(), data.to_numpy())
         prior = NormalParameters(
             mean=jnp.zeros((num_variables,)), precision=jnp.eye((num_variables)))
-        num_vb_updates = num_vb_updates
 
-        with trange(num_iterations, desc='Training') as pbar:
+        with trange(args.num_iterations, desc='Training') as pbar:
             for iteration in pbar:
-                losses = np.zeros(num_vb_updates)           
-                if (iteration + 1) % update_target_every == 0:
+                losses = np.zeros(args.num_vb_updates)           
+                if (iteration + 1) % args.update_target_every == 0:
                     # Update the parameters of the target network
                     gflownet.set_target(params)
                 # sample from posterior of graphs without adding to the environment
@@ -141,7 +133,7 @@ class Model:
                         )
                         observations = next_observations
                         state = next_state
-                        samples, subsq_mask = replay.sample(batch_size=batch_size, rng=rng)
+                        samples, subsq_mask = replay.sample(batch_size=args.batch_size, rng=rng)
                         params, state, logs = gflownet.step(
                             params,
                             gflownet.target_params,
@@ -167,16 +159,16 @@ class Model:
                 diff_mean = jnp.sum(abs(edge_params.mean - new_edge_params.mean)) / (edge_params.mean.shape[0]**2)
                 diff_prec = jnp.sum(abs(edge_params.precision - new_edge_params.precision)) / (edge_params.mean.shape[0]**2)
                 edge_params = new_edge_params
-                for vb_iters in range(num_vb_updates):
+                for vb_iters in range(args.num_vb_updates):
                     if vb_iters == 0:
                         state = gflownet.reset_optim(state, params, key)
                         epsilon = jnp.array(0.)
                         # only update epsilon if we are half way through training
-                    if iteration > (num_iterations * start_to_increase_eps):
-                        if not keep_epsilon_constant:
+                    if iteration > (args.num_iterations * args.start_to_increase_eps):
+                        if not args.keep_epsilon_constant:
                             epsilon = jnp.minimum(
-                                1-min_exploration,
-                                ((1-min_exploration)*2/num_vb_updates)*vb_iters)
+                                1-args.min_exploration,
+                                ((1-args.min_exploration)*2/args.num_vb_updates)*vb_iters)
                         else:
                             epsilon = jnp.array(0.)            
                     # Sample actions, execute them, and save transitions to the buffer
@@ -194,7 +186,7 @@ class Model:
                     observations = next_observations
                     state = next_state
 
-                    samples, subsq_mask = replay.sample(batch_size=batch_size, rng=rng)
+                    samples, subsq_mask = replay.sample(batch_size=args.batch_size, rng=rng)
                     diff_marg_ll = jax.vmap(
                         compute_delta_score_lingauss_full, in_axes=(0,0,None,None,None,
                                                                     None, None,None))(
@@ -204,8 +196,8 @@ class Model:
                                                                         prior,
                                                                         xtx,
                                                                         model_obs_noise,
-                                                                        weight,
-                                                                        use_erdos_prior)
+                                                                        args.weight,
+                                                                        args.use_erdos_prior)
 
                     samples['rewards'][0] = diff_marg_ll
                     params, state, logs = gflownet.step(

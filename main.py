@@ -6,7 +6,7 @@ import wandb
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.random import default_rng
-from vbg.main import Model
+from vbg.model import Model
 from data_generation import sample_erdos_renyi_linear_gaussian, sample_from_linear_gaussian
 from utils import get_weighted_adjacency, edge_marginal_means
 
@@ -50,8 +50,6 @@ def main(args):
     model_args = {}
     time_start = time()
     model = Model()
-    import pdb
-    pdb.set_trace()
     model_trained = model.train(data, rng, args.num_samples_posterior, args.num_variables, args.seed, args.model_obs_noise,  args)
     posterior_graphs, posterior_edges = model.sample()
     # save posterior samples
