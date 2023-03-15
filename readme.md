@@ -17,3 +17,7 @@ To simulate data from a DAG, and to run inference simply run:
 ```
 python main.py <inference model name>
 ```
+
+Structure learning methods currently include:
+- [VBG](https://arxiv.org/abs/2211.02763) 
+- [DIBS](https://arxiv.org/abs/2105.11839)
