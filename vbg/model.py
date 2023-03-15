@@ -25,13 +25,15 @@ class Model:
         self.params = None
         self.env_post = None
         self.state_key = None
+        self.key = None
         self.num_samples_posterior = None
         self.edge_params = None
 
-    def train(self, data, rng, num_samples_posterior,
+    def train(self, data, rng, key, num_samples_posterior,
               num_variables, seed, model_obs_noise, args):
         
         self.num_samples_posterior = num_samples_posterior
+        self.key = key
         scorer_cls = BGeScore
         env_kwargs = dict()
         scorer_kwargs = {
@@ -73,13 +75,12 @@ class Model:
             # int(0.8 * args.num_iterations): 0.01
         })
         
-        key = random.PRNGKey(seed)
         gflownet = GFlowNet(
             optimizer=optax.adam(scheduler),
             delta=args.delta,
             n_step=args.n_step
         )
-        params, state = gflownet.init(key, replay.dummy_adjacency)
+        params, state = gflownet.init(self.key, replay.dummy_adjacency)
 
         # Collect data (using random policy) to start filling the replay buffer
         observations = env.reset()
@@ -148,7 +149,7 @@ class Model:
                     params,
                     env_post,
                     state.key,
-                    num_samples=num_samples_posterior
+                    num_samples=self.num_samples_posterior
                 )
                 posterior_samples = (orders >= 0).astype(np.int_)
                 env_post.reset()
@@ -161,12 +162,12 @@ class Model:
                 edge_params = new_edge_params
                 for vb_iters in range(args.num_vb_updates):
                     if vb_iters == 0:
-                        state = gflownet.reset_optim(state, params, key)
+                        state = gflownet.reset_optim(state, params, self.key)
                         epsilon = jnp.array(0.)
                         # only update epsilon if we are half way through training
                     if iteration > (args.num_iterations * args.start_to_increase_eps):
                         if not args.keep_epsilon_constant:
-                            epsilon = jnp.minimum(
+                             epsilon = jnp.minimum(
                                 1-args.min_exploration,
                                 ((1-args.min_exploration)*2/args.num_vb_updates)*vb_iters)
                         else:
@@ -212,6 +213,7 @@ class Model:
         self.state_key = state.key
         self.edge_params = edge_params
         self.env_post = env_post
+        self.params = params
 
     def sample(self):
         orders = posterior_estimate(
@@ -221,11 +223,11 @@ class Model:
             num_samples=self.num_samples_posterior
         )
         posterior_graphs = (orders >= 0).astype(np.int_)
-        edge_cov = jax.vmap(jnp.linalg.inv, in_axes=-1, out_axes=-1)(edge_params.precision)
+        edge_cov = jax.vmap(jnp.linalg.inv, in_axes=-1, out_axes=-1)(self.edge_params.precision)
         posterior_edges = jax.vmap(
-            random.multivariate_normal, in_axes=(None, -1, -1, None),  out_axes=(-1))(key,
-                                                                                      edge_params.mean,
-                                                                                      edge_cov, (num_samples_posterior,))
+            random.multivariate_normal, in_axes=(None, -1, -1, None),  out_axes=(-1))(self.key,
+                                                                                      self.edge_params.mean,
+                                                                                      edge_cov, (self.num_samples_posterior,))
 
         return posterior_graphs, posterior_edges
 

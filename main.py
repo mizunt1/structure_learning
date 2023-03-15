@@ -6,22 +6,29 @@ import wandb
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.random import default_rng
-from vbg.model import Model
 from data_generation import sample_erdos_renyi_linear_gaussian, sample_from_linear_gaussian
 from utils import get_weighted_adjacency, edge_marginal_means
-
+from jax import random 
 from vbg.gflownet_sl.utils.wandb_utils import slurm_infos, table_from_dict, scatter_from_dicts, return_ordered_data
+
 
 def main(args):
     wandb.init(
-        project='vbg_git',
+        project='structure learning',
         settings=wandb.Settings(start_method='fork')
     )
     wandb.config.update(args)
     wandb.run.summary.update(slurm_infos())
+    if args.model == 'vbg':
+        from vbg.model import Model
+    elif args.model == 'dibs':
+        from dibs.model import Model
+    else:
+        raise Exception("inference method not implemented")
 
     rng = default_rng(args.seed)
     rng_2 = default_rng(args.seed + 1000)
+    key = random.PRNGKey(args.seed)
     if args.graph == 'erdos_renyi_lingauss':
         graph = sample_erdos_renyi_linear_gaussian(
             num_variables=args.num_variables,
@@ -50,7 +57,8 @@ def main(args):
     model_args = {}
     time_start = time()
     model = Model()
-    model_trained = model.train(data, rng, args.num_samples_posterior, args.num_variables, args.seed, args.model_obs_noise,  args)
+    model_trained = model.train(data, rng, key, args.num_samples_posterior, args.num_variables, args.seed, args.model_obs_noise,  args)
+    
     posterior_graphs, posterior_edges = model.sample()
     # save posterior samples
     is_dag = elwise_acyclic_constr_nograd(est_posterior_g, n_vars) == 0
@@ -177,9 +185,9 @@ def main(args):
 if __name__ == '__main__':
     from argparse import ArgumentParser
     import json
-    parser = ArgumentParser('GFlowNet for Structure Learning')
-    subparsers = parser.add_subparsers()
-    vbg_parser = subparsers.add_parser("vbg")
+    parser = ArgumentParser()
+    subparsers = parser.add_subparsers(dest='model')
+    vbg_parser = subparsers.add_parser('vbg')
     # graph generation
     parser.add_argument('--num_variables', type=int, default=5,
         help='Number of variables (nodes) (default: %(default)s)')
@@ -245,5 +253,9 @@ if __name__ == '__main__':
     vbg_parser.add_argument('--keep_epsilon_constant', default=False,
                             action='store_true',
                             help='do not increase epsilon over time')
+    dibs_parser = subparsers.add_parser('dibs')  
+    dibs_parser.add_argument('--steps', default=1000, type=int,
+                            help='number of training iters')
+
     args = parser.parse_args()
     main(args)
