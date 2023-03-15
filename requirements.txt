@@ -1,0 +1,11 @@
+sns==0.1
+wandb==0.13.11
+numpy==1.24.2
+matplotlib==3.7.1
+optax==0.1.4
+tqdm==4.65.0
+gym==0.26.2
+pandas==1.5.3
+dm-haiku==0.0.9
+pip install "jax[cuda]==0.4.1" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+

@@ -1,0 +1,32 @@
+import numpy as np
+
+from pgmpy.estimators import StructureScore
+
+
+class LinearGaussianScore(StructureScore):
+    def __init__(self, data, prior_mean=0., prior_scale=1., obs_scale=0.1):
+        super().__init__(data)
+        self.prior_mean = prior_mean
+        self.prior_scale = prior_scale
+        self.obs_scale = obs_scale
+
+    def local_score(self, node, parents):
+        num_samples, num_variables = self.data.shape
+        parents = set(parents)
+
+        mask = np.array([n in parents for n in self.variables], dtype=np.float_)
+        masked_data = np.asarray(self.data * mask)
+        
+        diff = np.asarray(self.data[node]) - self.prior_mean * np.sum(masked_data, axis=1)
+        Y = self.prior_scale * np.dot(masked_data.T, diff)
+        mat = ((self.obs_scale ** 2) * np.eye(num_variables)
+            + (self.prior_scale ** 2) * np.matmul(masked_data.T, masked_data))
+        
+        term1 = np.sum(diff ** 2)
+        term2 = np.vdot(Y, np.linalg.solve(mat, Y))
+        _, term3 = np.linalg.slogdet(mat)
+        # Constant terms
+        # term4 = 2 * (num_samples - num_variables) * math.log(self.obs_scale)
+        # term5 = num_samples * math.log(2 * math.pi)
+        
+        return -0.5 * (term3 + ((term1 - term2) / (self.obs_scale ** 2)))

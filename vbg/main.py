@@ -1,0 +1,239 @@
+import jax.numpy as jnp
+import numpy as np
+import optax
+import os
+
+from tqdm import trange
+from numpy.random import default_rng
+from jax import random
+import jax
+
+from collections import namedtuple
+from vbg.gflownet_sl.env import GFlowNetDAGEnv
+from vbg.gflownet_sl.scores import BDeuScore, BGeScore
+from vbg.gflownet_sl.gflownet import GFlowNet
+from vbg.gflownet_sl.replay_buffer import ReplayBuffer
+from vbg.gflownet_sl.utils.jnp_utils import get_random_actions
+from vbg.gflownet_sl.utils.gflownet import update_parameters_full
+from vbg.gflownet_sl.utils.gflownet import compute_delta_score_lingauss_full
+from vbg.gflownet_sl.utils.gflownet import edge_marginal_means
+from vbg.gflownet_sl.utils.metrics import posterior_estimate, get_log_features, return_file_paths
+
+NormalParameters = namedtuple('NormalParameters', ['mean', 'precision'])
+class Model:
+    def __init__(self): 
+        self.params = None
+        self.env_post = None
+        self.state_key = None
+        self.num_samples_posterior = None
+        self.edge_params = None
+
+    def train(self, data, rng, num_samples_posterior,
+              num_variables, seed, model_obs_noise,
+              batch_size=32, num_iterations=20, lr=1e-5,
+              num_vb_updates=2000, weight=0.1,
+              delta=1, prefill=1000, num_envs=8,
+              update_target_every=1000, n_step=1,
+              replay_capacity=100_000, replay_prioritized=False,
+              min_exploration=0.1, start_to_increase_eps=0.1, num_workers=4,
+              mp_context='spawn', use_erdos_prior=False, keep_epsilon_constant=False):
+
+        self.num_samples_posterior = num_samples_posterior
+        scorer_cls = BGeScore
+        env_kwargs = dict()
+        scorer_kwargs = {
+            'mean_obs': np.zeros(num_variables),
+            'alpha_mu': 1.,
+            'alpha_w': num_variables + 2.
+        }
+
+        env = GFlowNetDAGEnv(
+            num_envs=num_envs,
+            scorer=scorer_cls(data, **scorer_kwargs),
+            num_workers=num_workers,
+            context=mp_context,
+            vb=True,
+            **env_kwargs
+        )
+
+        env_post = GFlowNetDAGEnv(
+            num_envs=num_envs,
+            scorer=scorer_cls(data, **scorer_kwargs),
+            num_workers=num_workers,
+            context=mp_context,
+            vb=True,
+            **env_kwargs
+        )
+
+        # Create the replay buffer
+        replay = ReplayBuffer(
+            replay_capacity,
+            num_variables=env.num_variables,
+            n_step=n_step,
+            prioritized=replay_prioritized
+        )
+
+        # Create the GFlowNet & initialize parameters
+        scheduler = optax.piecewise_constant_schedule(lr, {
+            # int(0.4 * args.num_iterations): 0.1,
+            # int(0.6 * args.num_iterations): 0.05,
+            # int(0.8 * args.num_iterations): 0.01
+        })
+        
+        key = random.PRNGKey(seed)
+        gflownet = GFlowNet(
+            optimizer=optax.adam(scheduler),
+            delta=delta,
+            n_step=n_step
+        )
+        params, state = gflownet.init(key, replay.dummy_adjacency)
+
+        # Collect data (using random policy) to start filling the replay buffer
+        observations = env.reset()
+        indices = None
+        for _ in trange(prefill, desc='Collect data'):
+            # Sample random action
+            actions, state = get_random_actions(state, observations['mask'])
+
+            # Execute the actions and save the transitions to the replay buffer
+            next_observations, rewards, dones, _ = env.step(np.asarray(actions))
+            is_exploration = jnp.ones_like(actions)  # All these actions are from exploration step
+            indices = replay.add(
+                observations,
+                actions,
+                is_exploration,
+                next_observations,
+                rewards,
+                dones,
+                prev_indices=indices
+            )
+            observations = next_observations
+
+        # Training loop
+        tau = jnp.array(1.)  # Temperature for the posterior (should be equal to 1)
+        epsilon = jnp.array(0.)
+        num_samples = data.shape[0]
+        first_run = True
+        xtx = jnp.einsum('nk,nl->kl', data.to_numpy(), data.to_numpy())
+        prior = NormalParameters(
+            mean=jnp.zeros((num_variables,)), precision=jnp.eye((num_variables)))
+        num_vb_updates = num_vb_updates
+
+        with trange(num_iterations, desc='Training') as pbar:
+            for iteration in pbar:
+                losses = np.zeros(num_vb_updates)           
+                if (iteration + 1) % update_target_every == 0:
+                    # Update the parameters of the target network
+                    gflownet.set_target(params)
+                # sample from posterior of graphs without adding to the environment
+                if first_run:
+                    for _ in range(100):
+                        actions, is_exploration, next_state = gflownet.act(params, state, observations, epsilon)
+                        next_observations, rewards, dones, _ = env.step(np.asarray(actions))
+                        indices = replay.add(
+                            observations,
+                            actions,
+                            is_exploration,
+                            next_observations,
+                            rewards,
+                            dones,
+                            prev_indices=indices
+                        )
+                        observations = next_observations
+                        state = next_state
+                        samples, subsq_mask = replay.sample(batch_size=batch_size, rng=rng)
+                        params, state, logs = gflownet.step(
+                            params,
+                            gflownet.target_params,
+                            state,
+                            samples,
+                            subsq_mask,
+                            tau
+                        )
+                    edge_params = prior
+                first_run = False
+                orders = posterior_estimate(
+                    params,
+                    env_post,
+                    state.key,
+                    num_samples=num_samples_posterior
+                )
+                posterior_samples = (orders >= 0).astype(np.int_)
+                env_post.reset()
+                new_edge_params = update_parameters_full(prior,
+                                                         posterior_samples,
+                                                         data.to_numpy(),
+                                                         model_obs_noise)
+                diff_mean = jnp.sum(abs(edge_params.mean - new_edge_params.mean)) / (edge_params.mean.shape[0]**2)
+                diff_prec = jnp.sum(abs(edge_params.precision - new_edge_params.precision)) / (edge_params.mean.shape[0]**2)
+                edge_params = new_edge_params
+                for vb_iters in range(num_vb_updates):
+                    if vb_iters == 0:
+                        state = gflownet.reset_optim(state, params, key)
+                        epsilon = jnp.array(0.)
+                        # only update epsilon if we are half way through training
+                    if iteration > (num_iterations * start_to_increase_eps):
+                        if not keep_epsilon_constant:
+                            epsilon = jnp.minimum(
+                                1-min_exploration,
+                                ((1-min_exploration)*2/num_vb_updates)*vb_iters)
+                        else:
+                            epsilon = jnp.array(0.)            
+                    # Sample actions, execute them, and save transitions to the buffer
+                    actions, is_exploration, next_state = gflownet.act(params, state, observations, epsilon)
+                    next_observations, rewards, dones, _ = env.step(np.asarray(actions))
+                    indices = replay.add(
+                        observations,
+                        actions,
+                        is_exploration,
+                        next_observations,
+                        rewards,
+                        dones,
+                        prev_indices=indices
+                    )
+                    observations = next_observations
+                    state = next_state
+
+                    samples, subsq_mask = replay.sample(batch_size=batch_size, rng=rng)
+                    diff_marg_ll = jax.vmap(
+                        compute_delta_score_lingauss_full, in_axes=(0,0,None,None,None,
+                                                                    None, None,None))(
+                                                                        samples['adjacency'][0],
+                                                                        samples['actions'][0],
+                                                                        edge_params,
+                                                                        prior,
+                                                                        xtx,
+                                                                        model_obs_noise,
+                                                                        weight,
+                                                                        use_erdos_prior)
+
+                    samples['rewards'][0] = diff_marg_ll
+                    params, state, logs = gflownet.step(
+                        params,
+                        gflownet.target_params,
+                        state,
+                        samples,
+                        subsq_mask,
+                        tau
+                    )
+                    replay.update_priorities(samples, logs['error'])
+        self.state_key = state.key
+        self.edge_params = edge_params
+        self.env_post = env_post
+
+    def sample(self):
+        orders = posterior_estimate(
+            self.params,
+            self.env_post,
+            self.state_key,
+            num_samples=self.num_samples_posterior
+        )
+        posterior_graphs = (orders >= 0).astype(np.int_)
+        edge_cov = jax.vmap(jnp.linalg.inv, in_axes=-1, out_axes=-1)(edge_params.precision)
+        posterior_edges = jax.vmap(
+            random.multivariate_normal, in_axes=(None, -1, -1, None),  out_axes=(-1))(key,
+                                                                                      edge_params.mean,
+                                                                                      edge_cov, (num_samples_posterior,))
+
+        return posterior_graphs, posterior_edges
+

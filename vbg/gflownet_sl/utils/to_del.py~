@@ -1,0 +1,10 @@
+def compute_delta_score_lingauss(adjacency, action, params, XTX, obs_noise):
+    num_variables = params.mean.shape[0]
+    source, target = divmod(action, num_variables)
+    term1 = -2 * params.mean[source, target] * XTX[source, target]
+    moment_2 = 1. / params.precision[source, target] + params.mean[source, target] ** 2
+    term2 = XTX[source, source] * moment_2
+    term3 = 2 * params.mean[source, target] * jnp.vdot(
+        XTX[source], adjacency[:, target] * params.mean[:, target])
+ 
+    return -0.5 * (term1 + term2 + term3) / (obs_noise ** 2)
