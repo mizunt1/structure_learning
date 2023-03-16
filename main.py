@@ -21,7 +21,7 @@ from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
     get_edge_log_features, get_path_log_features, get_markov_blanket_log_features)
 
 # note run with generic then model specific arg parse
-# eg python main.py --num_variables 5 vbg --num_iterations 1000
+# eg python main.py --num_samples_posterior 100 vbg --num_iterations 2 --num_vb_updates 100
 
 def main(args):
     wandb.init(
@@ -33,7 +33,7 @@ def main(args):
     if args.model == 'vbg':
         from vbg.model import Model
     elif args.model == 'dibs':
-        from dibs.model import Model
+        from dibs_model.model import Model
     else:
         raise Exception("inference method not implemented")
 
