@@ -1,16 +1,27 @@
 import os
 from time import time
 
-import sns
+import seaborn as sns
 import wandb
 import numpy as np
+import networkx as nx
 import matplotlib.pyplot as plt
+import sklearn as sk
+from jax import random 
 from numpy.random import default_rng
+from argparse import ArgumentParser
+
 from data_generation import sample_erdos_renyi_linear_gaussian, sample_from_linear_gaussian
 from utils import get_weighted_adjacency, edge_marginal_means
-from jax import random 
 from vbg.gflownet_sl.utils.wandb_utils import slurm_infos, table_from_dict, scatter_from_dicts, return_ordered_data
+from vbg.gflownet_sl.metrics.metrics import LL, expected_shd, threshold_metrics, expected_edges
+from vbg.gflownet_sl.utils.metrics import get_log_features
+from dibs.graph_utils import elwise_acyclic_constr_nograd
+from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
+    get_edge_log_features, get_path_log_features, get_markov_blanket_log_features)
 
+# note run with generic then model specific arg parse
+# eg python main.py --num_variables 5 vbg --num_iterations 1000
 
 def main(args):
     wandb.init(
@@ -54,16 +65,14 @@ def main(args):
     data_test.to_csv(os.path.join(wandb.run.dir, 'data_test.csv'))
     wandb.save('data_test.csv', policy='now')
     wandb.save('data_train.csv', policy='now')
-    model_args = {}
-    time_start = time()
+    start_time = time()
     model = Model()
     model_trained = model.train(data, rng, key, args.num_samples_posterior, args.num_variables, args.seed, args.model_obs_noise,  args)
-    
     posterior_graphs, posterior_edges = model.sample()
     # save posterior samples
-    is_dag = elwise_acyclic_constr_nograd(est_posterior_g, n_vars) == 0
-    est_posterior_g = est_posterior_g[is_dag, :, :]
-    est_posterior_theta = est_posterior_theta[is_dag, :, :]
+    is_dag = elwise_acyclic_constr_nograd(posterior_graphs, args.num_variables) == 0
+    posterior_graphs = posterior_graphs[is_dag, :, :]
+    posterior_edges = posterior_edges[is_dag, :, :]
 
     with open(os.path.join(wandb.run.dir, 'posterior_graphs.npy'), 'wb') as f:
         np.save(f, posterior_graphs)
@@ -74,12 +83,14 @@ def main(args):
 
     time_elapsed = time() - start_time
     time_in_hrs = time_elapsed / (60*60)
+    wandb.log({'time in hrs': time_in_hrs})
     weighted_adj = get_weighted_adjacency(graph)
-    binary_adj = weighted_adg > 0
+    binary_adj = weighted_adj > 0
     posterior_edges_mean = np.mean(posterior_edges, axis=0)
     if args.num_variables > 5:
         annot = False
-
+    else:
+        annot = True
     # mean squared errpr of mean of linear mechanisms parameters compared to real 
     mat = [[(weighted_adj[i,j] - posterior_edges_mean[i,j])**2 for j in range(args.num_variables)] for i in range(args.num_variables)]
     sum_ = sum([sum(mat[i]) for i in range(args.num_variables)])
@@ -94,7 +105,7 @@ def main(args):
     wandb.log({'edge marginal means': wandb.Image(edge_mm_plot)})
 
     # plot edge marginals
-    edge_marginals = np.sum(posterior_samples, axis=0)/posterior_samples.shape[0]
+    edge_marginals = np.sum(posterior_graphs, axis=0)/posterior_graphs.shape[0]
     plt.clf()
     edge_m_plot = sns.heatmap(
         edge_marginals, cmap="Blues", annot=annot, annot_kws={"size": 16})
@@ -108,13 +119,13 @@ def main(args):
     gt_adjacency = nx.to_numpy_array(graph, weight=None)
 
     # Expected SHD
-    mean_shd = expected_shd(posterior, gt_adjacency)
+    mean_shd = expected_shd(posterior_graphs, gt_adjacency)
 
     # Expected # Edges
-    mean_edges = expected_edges(posterior)
+    mean_edges = expected_edges(posterior_graphs)
 
     # Threshold metrics
-    thresholds = threshold_metrics(posterior, gt_adjacency)
+    thresholds = threshold_metrics(posterior_graphs, gt_adjacency)
 
     wandb.run.summary.update({
         'metrics/shd/mean': mean_shd,
@@ -137,6 +148,7 @@ def main(args):
         full_edge_log_features = get_edge_log_features(full_posterior)
         full_path_log_features = get_path_log_features(full_posterior)
         full_markov_log_features = get_markov_blanket_log_features(full_posterior)
+        log_features = get_log_features(posterior_graphs, data.columns)
         wandb.run.summary.update({
             'posterior/fufll/edge': table_from_dict(full_edge_log_features),
             'posterior/full/path': table_from_dict(full_path_log_features),
@@ -150,17 +162,12 @@ def main(args):
             'posterior/scatter/markov_blanket': scatter_from_dicts('full', full_markov_log_features,
                 'estimate', log_features.markov_blanket, transform=np.exp, title='Markov blanket features')
         })
-        full_edge = list(full_edge_log_features.values())
-        est_edge = list(log_features.edge.values())
-
         full_edge_ordered, est_edge_ordered = return_ordered_data(full_edge_log_features,
                 log_features.edge, transform=np.exp)
         edge_mse = sk.metrics.mean_squared_error(est_edge_ordered, full_edge_ordered)
         edge_corr = np.corrcoef(full_edge_ordered, est_edge_ordered)[0][1]
         wandb.log({'edge correlation': edge_corr, 'edge mse': edge_mse})
         
-        full_path = list(full_path_log_features.values())
-        est_path = list(log_features.path.values())
         full_path_ordered, est_path_ordered = return_ordered_data(full_path_log_features,
                 log_features.path, transform=np.exp)
         path_mse = sk.metrics.mean_squared_error(est_path_ordered, full_path_ordered)
@@ -172,10 +179,10 @@ def main(args):
 
         markov_corr = np.corrcoef(full_markov_ordered, est_markov_ordered)[0][1]
         markov_mse = sk.metrics.mean_squared_error(est_markov_ordered, full_markov_ordered)
-        wandb.log({'markov correlation': path_corr,  'markov mse': markov_mse})
+        wandb.log({'markov correlation': markov_corr,  'markov mse': markov_mse})
 
         # The posterior estimate returns the order in which the edges have been added
-        log_features = get_log_features(posterior, data.columns)
+        log_features = get_log_features(posterior_graphs, data.columns)
         wandb.run.summary.update({
             'posterior/estimate/edge': table_from_dict(log_features.edge),
             'posterior/estimate/path': table_from_dict(log_features.path),
@@ -183,8 +190,6 @@ def main(args):
         })
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser
-    import json
     parser = ArgumentParser()
     subparsers = parser.add_subparsers(dest='model')
     vbg_parser = subparsers.add_parser('vbg')

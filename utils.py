@@ -1,3 +1,4 @@
+import numpy as np
 def get_weighted_adjacency(graph):
     adjacency = np.zeros((len(graph), len(graph)), dtype=np.float_)
     index = dict((node, idx) for (idx, node) in enumerate(graph.nodes))
