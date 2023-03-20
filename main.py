@@ -69,7 +69,7 @@ def main(args):
     wandb.save('data_train.csv', policy='now')
     start_time = time()
     model = Model()
-    model_trained = model.train(data, rng, key, args.num_samples_posterior, args.num_variables, args.seed, args.model_obs_noise,  args)
+    model_trained = model.train(data, args.num_samples_posterior, args.num_variables, args.seed, args.model_obs_noise,  args)
     posterior_graphs, posterior_edges = model.sample()
     # save posterior samples
     is_dag = elwise_acyclic_constr_nograd(posterior_graphs, args.num_variables) == 0

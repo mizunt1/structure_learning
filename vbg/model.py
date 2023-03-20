@@ -29,11 +29,13 @@ class Model:
         self.num_samples_posterior = None
         self.edge_params = None
 
-    def train(self, data, rng, key, num_samples_posterior,
+    def train(self, data, num_samples_posterior,
               num_variables, seed, model_obs_noise, args):
         
+        self.key = random.PRNGKey(seed)
+        self.rng = default_rng(seed)
         self.num_samples_posterior = num_samples_posterior
-        self.key = key
+
         scorer_cls = BGeScore
         env_kwargs = dict()
         scorer_kwargs = {
@@ -134,7 +136,7 @@ class Model:
                         )
                         observations = next_observations
                         state = next_state
-                        samples, subsq_mask = replay.sample(batch_size=args.batch_size, rng=rng)
+                        samples, subsq_mask = replay.sample(batch_size=args.batch_size, rng=self.rng)
                         params, state, logs = gflownet.step(
                             params,
                             gflownet.target_params,
@@ -187,7 +189,7 @@ class Model:
                     observations = next_observations
                     state = next_state
 
-                    samples, subsq_mask = replay.sample(batch_size=args.batch_size, rng=rng)
+                    samples, subsq_mask = replay.sample(batch_size=args.batch_size, rng=self.rng)
                     diff_marg_ll = jax.vmap(
                         compute_delta_score_lingauss_full, in_axes=(0,0,None,None,None,
                                                                     None, None,None))(
