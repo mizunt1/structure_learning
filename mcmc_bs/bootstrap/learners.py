@@ -6,7 +6,7 @@ from cdt.causality.graph import GES as rGES
 from cdt.causality.graph import PC as rPC
 
 # from dibs.utils.graph import *
-from gflownet_sl.baselines.bootstrap.utils import nx_adjacency, random_consistent_expansion
+from mcmc_bs.bootstrap.utils import nx_adjacency, random_consistent_expansion
 
 import warnings
 warnings.filterwarnings("ignore", message="No GPU automatically detected")
