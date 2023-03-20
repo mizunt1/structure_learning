@@ -28,12 +28,12 @@ class Model:
         self.edge_params = None
 
     def train(self, data, num_samples_posterior,
-              num_variables, seed, model_obs_noise, args):
+              seed, model_obs_noise, args):
         
         self.key = random.PRNGKey(seed)
         self.rng = default_rng(seed)
         self.num_samples_posterior = num_samples_posterior
-
+        num_variables = self.data.shape[1]
         scorer_cls = BGeScore
         env_kwargs = dict()
         scorer_kwargs = {

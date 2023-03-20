@@ -19,7 +19,6 @@ from vbg.gflownet_sl.utils.metrics import get_log_features
 from dibs.graph_utils import elwise_acyclic_constr_nograd
 from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
     get_edge_log_features, get_path_log_features, get_markov_blanket_log_features)
-
 # note run with generic then model specific arg parse
 # eg python main.py --num_samples_posterior 100 vbg --num_iterations 2 --num_vb_updates 100
 
@@ -35,9 +34,9 @@ def main(args):
     elif args.model == 'dibs':
         from dibs_model.model import Model
     elif args.model == 'mcmc':
-        from mcmc import Model
+        from mcmc.model import Model
     elif args.model == 'bs':
-        from bs import Model
+        from bs.model import Model
     else:
         raise Exception("inference method not implemented")
 
@@ -71,7 +70,7 @@ def main(args):
     wandb.save('data_train.csv', policy='now')
     start_time = time()
     model = Model()
-    model_trained = model.train(data, args.num_samples_posterior, args.num_variables, args.seed, args.model_obs_noise,  args)
+    model_trained = model.train(data, args.num_samples_posterior, args.seed, args.model_obs_noise,  args)
     posterior_graphs, posterior_edges = model.sample()
     # save posterior samples
     is_dag = elwise_acyclic_constr_nograd(posterior_graphs, args.num_variables) == 0
