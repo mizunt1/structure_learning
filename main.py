@@ -34,8 +34,10 @@ def main(args):
         from vbg.model import Model
     elif args.model == 'dibs':
         from dibs_model.model import Model
-    elif 'mcmc' in args.model:
+    elif args.model == 'mcmc':
         from mcmc import Model
+    elif args.model == 'bs':
+        from bs import Model
     else:
         raise Exception("inference method not implemented")
 
@@ -263,10 +265,9 @@ if __name__ == '__main__':
     dibs_parser = subparsers.add_parser('dibs')  
     dibs_parser.add_argument('--steps', default=1000, type=int,
                             help='number of training iters')
-
     mcmc_parser = subparsers.add_parser('mcmc')
     mcmc_parser.add_argument('--method', choices=['mh', 'gibbs'])
-    bs_parser = subparsers.add_parser('mcmc')
+    bs_parser = subparsers.add_parser('bs')
     bs_parser.add_argument('--method', choices=['ges', 'pc'])
     
     args = parser.parse_args()
