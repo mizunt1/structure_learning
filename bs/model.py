@@ -4,8 +4,8 @@ os.environ['JAX_ENABLE_X64'] = 'True'  # float64 precision
 import jax.numpy as jnp
 import jax
 
-from gflownet_sl.baselines.bootstrap.bootstrap import NonparametricDAGBootstrap
-from gflownet_sl.baselines.bootstrap.learners import PC, GES
+from mcmc_bs.bootstrap.bootstrap import NonparametricDAGBootstrap
+from mcmc_bs.bootstrap.learners import PC, GES
 
 jax.config.update('jax_platform_name', 'cpu')
 
@@ -16,7 +16,7 @@ class Model:
     def train(self, data, num_samples_posterior,
               num_variables, seed, model_obs_noise, args):
         self.num_samples_posterior = num_samples_posterior
-        self.data = data
+        self.data = data.to_numpy()
         self.seed = seed
         self.key = jax.random.PRNGKey(self.seed) 
         if args.method == 'ges':

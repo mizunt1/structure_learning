@@ -3,7 +3,7 @@ from jax import jit, vmap, random
 from jax.scipy.stats import multivariate_normal as jax_multivariate_normal
 from jax.scipy.stats import norm as jax_normal
 
-from gflownet_sl.baselines.mcmc_joint.utils import sel
+from mcmc_bs.mcmc_joint.utils import sel
 
 class LinearGaussianGaussianJAX:
     """	

@@ -5,7 +5,7 @@ from jax import random
 import jax.numpy as jnp
 import numpy as np
 
-from gflownet_sl.baselines.bootstrap.utils import InvalidCPDAGError, ContinualInvalidCPDAGError
+from mcmc_bs.bootstrap.utils import InvalidCPDAGError, ContinualInvalidCPDAGError
 
 
 class NonparametricDAGBootstrap:

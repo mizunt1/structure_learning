@@ -8,9 +8,9 @@ import jax.numpy as jnp
 from jax import random 
 from jax.tree_util import tree_map
 
-from gflownet_sl.baselines.mcmc_joint.utils import tree_key_split, tree_zip_leading, graph_to_mat
+from mcmc_bs.mcmc_joint.utils import tree_key_split, tree_zip_leading, graph_to_mat
 
-from gflownet_sl.baselines.mcmc_joint.structure import StructureMCMC
+from mcmc_bs.mcmc_joint.structure import StructureMCMC
 
 class MHJointStructureMCMC(StructureMCMC):
     """
