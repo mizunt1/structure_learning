@@ -72,8 +72,6 @@ def main(args):
     model = Model()
     model_trained = model.train(data, args.num_samples_posterior, args.seed, args.model_obs_noise,  args)
     posterior_graphs, posterior_edges = model.sample()
-    import pdb
-    pdb.set_trace()
     # save posterior samples
     is_dag = elwise_acyclic_constr_nograd(posterior_graphs, args.num_variables) == 0
     posterior_graphs = posterior_graphs[is_dag, :, :]
