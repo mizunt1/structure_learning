@@ -13,11 +13,11 @@ from argparse import ArgumentParser
 
 from data_generation import sample_erdos_renyi_linear_gaussian, sample_from_linear_gaussian
 from utils import get_weighted_adjacency, edge_marginal_means
-from vbg_model.gflownet_sl.utils.wandb_utils import slurm_infos, table_from_dict, scatter_from_dicts, return_ordered_data
-from vbg_model.gflownet_sl.metrics.metrics import LL, expected_shd, threshold_metrics, expected_edges
-from vbg_model.gflownet_sl.utils.metrics import get_log_features
+from vbg.gflownet_sl.utils.wandb_utils import slurm_infos, table_from_dict, scatter_from_dicts, return_ordered_data
+from vbg.gflownet_sl.metrics.metrics import LL, expected_shd, threshold_metrics, expected_edges
+from vbg.gflownet_sl.utils.metrics import get_log_features
 from dibs.graph_utils import elwise_acyclic_constr_nograd
-from vbg_model.gflownet_sl.utils.exhaustive import (get_full_posterior,
+from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
     get_edge_log_features, get_path_log_features, get_markov_blanket_log_features)
 
 # note run with generic then model specific arg parse
@@ -35,7 +35,7 @@ def main(args):
     elif args.model == 'dibs':
         from dibs_model.model import Model
     elif 'mcmc' in args.model:
-        from mcmc_model import Model
+        from mcmc import Model
     else:
         raise Exception("inference method not implemented")
 
