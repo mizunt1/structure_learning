@@ -1,7 +1,6 @@
 import jax.numpy as jnp
 import numpy as np
 import optax
-import os
 
 from tqdm import trange
 from numpy.random import default_rng
@@ -10,14 +9,13 @@ import jax
 
 from collections import namedtuple
 from vbg.gflownet_sl.env import GFlowNetDAGEnv
-from vbg.gflownet_sl.scores import BDeuScore, BGeScore
+from vbg.gflownet_sl.scores import BGeScore
 from vbg.gflownet_sl.gflownet import GFlowNet
 from vbg.gflownet_sl.replay_buffer import ReplayBuffer
 from vbg.gflownet_sl.utils.jnp_utils import get_random_actions
 from vbg.gflownet_sl.utils.gflownet import update_parameters_full
 from vbg.gflownet_sl.utils.gflownet import compute_delta_score_lingauss_full
-from vbg.gflownet_sl.utils.gflownet import edge_marginal_means
-from vbg.gflownet_sl.utils.metrics import posterior_estimate, get_log_features, return_file_paths
+from vbg.gflownet_sl.utils.metrics import posterior_estimate
 
 NormalParameters = namedtuple('NormalParameters', ['mean', 'precision'])
 class Model:
