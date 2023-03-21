@@ -1,6 +1,5 @@
 import os
 from time import time
-
 import seaborn as sns
 import wandb
 import numpy as np
@@ -19,6 +18,7 @@ from vbg.gflownet_sl.utils.metrics import get_log_features
 from dibs.graph_utils import elwise_acyclic_constr_nograd
 from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
     get_edge_log_features, get_path_log_features, get_markov_blanket_log_features)
+
 # note run with generic then model specific arg parse
 # eg python main.py --num_samples_posterior 100 vbg --num_iterations 2 --num_vb_updates 100
 
