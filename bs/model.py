@@ -13,8 +13,9 @@ class Model:
     def __init__(self):
         self.seed = None
         self.boot = None
+
     def train(self, data, num_samples_posterior,
-              num_variables, seed, model_obs_noise, args):
+               seed, model_obs_noise, args):
         self.num_samples_posterior = num_samples_posterior
         self.data = data.to_numpy()
         self.seed = seed

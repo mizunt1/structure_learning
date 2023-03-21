@@ -33,6 +33,7 @@ class Model:
         self.key = random.PRNGKey(seed)
         self.rng = default_rng(seed)
         self.num_samples_posterior = num_samples_posterior
+        self.data = data
         num_variables = self.data.shape[1]
         scorer_cls = BGeScore
         env_kwargs = dict()
@@ -44,7 +45,7 @@ class Model:
 
         env = GFlowNetDAGEnv(
             num_envs=args.num_envs,
-            scorer=scorer_cls(data, **scorer_kwargs),
+            scorer=scorer_cls(self.data, **scorer_kwargs),
             num_workers=args.num_workers,
             context=args.mp_context,
             vb=True,
@@ -53,7 +54,7 @@ class Model:
 
         env_post = GFlowNetDAGEnv(
             num_envs=args.num_envs,
-            scorer=scorer_cls(data, **scorer_kwargs),
+            scorer=scorer_cls(self.data, **scorer_kwargs),
             num_workers=args.num_workers,
             context=args.mp_context,
             vb=True,
@@ -106,9 +107,8 @@ class Model:
         # Training loop
         tau = jnp.array(1.)  # Temperature for the posterior (should be equal to 1)
         epsilon = jnp.array(0.)
-        num_samples = data.shape[0]
         first_run = True
-        xtx = jnp.einsum('nk,nl->kl', data.to_numpy(), data.to_numpy())
+        xtx = jnp.einsum('nk,nl->kl', self.data.to_numpy(), self.data.to_numpy())
         prior = NormalParameters(
             mean=jnp.zeros((num_variables,)), precision=jnp.eye((num_variables)))
 
@@ -155,7 +155,7 @@ class Model:
                 env_post.reset()
                 new_edge_params = update_parameters_full(prior,
                                                          posterior_samples,
-                                                         data.to_numpy(),
+                                                         self.data.to_numpy(),
                                                          model_obs_noise)
                 diff_mean = jnp.sum(abs(edge_params.mean - new_edge_params.mean)) / (edge_params.mean.shape[0]**2)
                 diff_prec = jnp.sum(abs(edge_params.precision - new_edge_params.precision)) / (edge_params.mean.shape[0]**2)

@@ -11,3 +11,4 @@ dibs-lib==1.2.0
 networkx==3.0
 scikit-learn==1.2.2
 pgmpy==0.1.21
+dibs-lib
