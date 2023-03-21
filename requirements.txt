@@ -10,3 +10,4 @@ dm-haiku==0.0.9
 dibs-lib==1.2.0
 networkx==3.0
 scikit-learn==1.2.2
+dibs-lib
