@@ -3,3 +3,4 @@ venv/
 *pyc
 /wandb/
 *slurm*.txt
+*__pycache__*

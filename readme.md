@@ -36,6 +36,6 @@ python main.py <inference model name>
 Structure learning methods currently include:
 - [VBG](https://arxiv.org/abs/2211.02763) 
 - [DIBS](https://arxiv.org/abs/2105.11839)
+- [BCD](https://arxiv.org/abs/2112.02761)
 - MCMC (Metropolis hastings / Gibbs)
 - BS (WIP)
-- [BCD](https://arxiv.org/abs/2112.02761)
