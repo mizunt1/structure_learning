@@ -74,10 +74,10 @@ def main(args):
     model_trained = model.train(data, args.seed)
     if args.model in ['vbg', 'mcmc', 'bs', 'bcd']:
         # sampling procedure is stochastic
-        posterior_graphs, posterior_edges = model.sample(args.seed)
+        posterior_graphs, posterior_edges, sigmas = model.sample(args.seed)
     else:
         # for dibs sampling procedure is not stochastic
-        posterior_graphs, posterior_edges = model.sample()
+        posterior_graphs, posterior_edges, sigmas = model.sample()
     # save posterior samples
     is_dag = elwise_acyclic_constr_nograd(posterior_graphs, args.num_variables) == 0
     posterior_graphs = posterior_graphs[is_dag, :, :]
@@ -279,7 +279,6 @@ if __name__ == '__main__':
     bs_parser = subparsers.add_parser('mcmc')
     bs_parser.add_argument('--method', choices=['ges', 'pc'])
     bcd_parser = subparsers.add_parser('bcd')
-    bcd_parser.add_argument('--')
     mcmc_parser = subparsers.add_parser('mcmc')
     args = parser.parse_args()
     main(args)
