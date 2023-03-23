@@ -1,8 +1,7 @@
 import os
 from time import time
-
 import seaborn as sns
-import wandb
+import wandb, pdb
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -19,6 +18,7 @@ from vbg.gflownet_sl.utils.metrics import get_log_features
 from dibs.graph_utils import elwise_acyclic_constr_nograd
 from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
     get_edge_log_features, get_path_log_features, get_markov_blanket_log_features)
+
 # note run with generic then model specific arg parse
 # eg python main.py --num_samples_posterior 100 vbg --num_iterations 2 --num_vb_updates 100
 
@@ -33,16 +33,15 @@ def main(args):
         from vbg.model import Model
     elif args.model == 'dibs':
         from dibs_model.model import Model
-    elif args.model == 'mcmc':
-        from mcmc.model import Model
-    elif args.model == 'bs':
-        from bs.model import Model
+    elif 'mcmc' in args.model:
+        from mcmc import Model
     else:
         raise Exception("inference method not implemented")
 
     rng = default_rng(args.seed)
     rng_2 = default_rng(args.seed + 1000)
     key = random.PRNGKey(args.seed)
+    
     if args.graph == 'erdos_renyi_lingauss':
         graph = sample_erdos_renyi_linear_gaussian(
             num_variables=args.num_variables,
@@ -70,7 +69,7 @@ def main(args):
     wandb.save('data_train.csv', policy='now')
     start_time = time()
     model = Model()
-    model_trained = model.train(data, args.num_samples_posterior, args.seed, args.model_obs_noise,  args)
+    model_trained = model.train(data, rng, key, args.num_samples_posterior, args.num_variables, args.seed, args.model_obs_noise,  args)
     posterior_graphs, posterior_edges = model.sample()
     # save posterior samples
     is_dag = elwise_acyclic_constr_nograd(posterior_graphs, args.num_variables) == 0
@@ -196,6 +195,7 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     subparsers = parser.add_subparsers(dest='model')
     vbg_parser = subparsers.add_parser('vbg')
+
     # graph generation
     parser.add_argument('--num_variables', type=int, default=5,
         help='Number of variables (nodes) (default: %(default)s)')
@@ -209,6 +209,7 @@ if __name__ == '__main__':
                         help='upper limit for edge scale')
     parser.add_argument('--low_edges', type=float, default=0.5,
                         help='lower limit for edge scale')
+
     # data generation
     parser.add_argument('--seed', type=int, default=0,
         help='Random seed (default: %(default)s)')
@@ -261,12 +262,14 @@ if __name__ == '__main__':
     vbg_parser.add_argument('--keep_epsilon_constant', default=False,
                             action='store_true',
                             help='do not increase epsilon over time')
+
     dibs_parser = subparsers.add_parser('dibs')  
     dibs_parser.add_argument('--steps', default=1000, type=int,
                             help='number of training iters')
+
     mcmc_parser = subparsers.add_parser('mcmc')
     mcmc_parser.add_argument('--method', choices=['mh', 'gibbs'])
-    bs_parser = subparsers.add_parser('bs')
+    bs_parser = subparsers.add_parser('mcmc')
     bs_parser.add_argument('--method', choices=['ges', 'pc'])
     
     args = parser.parse_args()

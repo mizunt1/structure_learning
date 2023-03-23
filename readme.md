@@ -22,6 +22,12 @@ pip install pip install "jax[cuda]==0.3.1" -f https://storage.googleapis.com/jax
 pip install -r requirements_bs.txt
 
 ```
+To setup BCD nets:
+```
+chmod +x bcd_setup.sh
+./bcd_setup.sh
+```
+
 To simulate data from a DAG, and to run inference simply run: 
 ```
 python main.py <inference model name>
@@ -32,4 +38,4 @@ Structure learning methods currently include:
 - [DIBS](https://arxiv.org/abs/2105.11839)
 - MCMC (Metropolis hastings / Gibbs)
 - BS (WIP)
-- BCD (WIP)
+- [BCD](https://arxiv.org/abs/2112.02761)

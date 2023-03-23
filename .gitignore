@@ -1,4 +1,5 @@
 *~
 venv/
-*.pyc
+*pyc
 /wandb/
+*slurm*.txt

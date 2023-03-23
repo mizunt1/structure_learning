@@ -66,4 +66,4 @@ class Model:
             **self.mcmc_run_params,
             verbose_indication=True
         )
-        return g_samples, theta_samples
+        return g_samples, theta_samples, None

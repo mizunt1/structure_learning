@@ -1,4 +1,4 @@
-sns==0.1
+seaborn==0.12.2
 wandb==0.13.11
 numpy==1.24.2
 matplotlib==3.7.1
@@ -10,4 +10,5 @@ dm-haiku==0.0.9
 dibs-lib==1.2.0
 networkx==3.0
 scikit-learn==1.2.2
+pgmpy==0.1.21
 dibs-lib

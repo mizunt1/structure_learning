@@ -229,5 +229,5 @@ class Model:
                                                                                       self.edge_params.mean,
                                                                                       edge_cov, (self.num_samples_posterior,))
 
-        return posterior_graphs, posterior_edges
+        return posterior_graphs, posterior_edges, None
 

@@ -56,4 +56,4 @@ class Model:
             'graphs': g_samples,
         }
         theta_samples = self.boot.learner.get_mle_params(mle_kwargs)
-        return g_samples, theta_samples
+        return g_samples, theta_samples, None

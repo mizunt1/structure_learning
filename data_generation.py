@@ -1,15 +1,12 @@
-import os
 import string
-
 import numpy as np
 import networkx as nx
 import pandas as pd
 from pgmpy import models
-from numpy.random import default_rng, binomial, uniform
+from numpy.random import default_rng
 from itertools import chain, product, islice, count
 from pgmpy.factors.continuous import LinearGaussianCPD
-from pgmpy.models import LinearGaussianBayesianNetwork, BayesianNetwork
-from pgmpy.sampling import BayesianModelSampling
+from pgmpy.models import LinearGaussianBayesianNetwork
 
 def sample_erdos_renyi_graph(
         num_variables,

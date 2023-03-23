@@ -7,14 +7,14 @@
 
 WANDB_API_KEY=$17a113b4804951bde9c66b2002fe378c0209fb64
 WANDB_ENTITY=$mizunt
-module load python/3.7
-module load cuda/11.1/cudnn/8.0
+module load python/3.9
+module load cuda/11.2/cudnn/8.1
 
 python -m venv $SLURM_TMPDIR/venv
 source $SLURM_TMPDIR/venv/bin/activate
-
+pip install "jax[cuda]==0.4.1" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 pip install --upgrade pip
-pip install "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-pip install -r requirements.txt
 
-python main.py vbg 
+pip install -r requirements.txt
+pip uninstall -y torch
+python main.py mcmc --method gibbs
