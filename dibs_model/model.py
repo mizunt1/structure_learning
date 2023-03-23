@@ -22,4 +22,4 @@ class Model:
 
     def sample(self):
         gs, thetas = self.dibs.sample(key=self.subk, n_particles=self.num_samples_posterior, steps=self.steps)
-        return gs, thetas
+        return gs, thetas, None
