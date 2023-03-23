@@ -35,7 +35,7 @@ class CheckTypesFilter(logging.Filter):
 
 
 class BCD:
-    def __init__(self, rng_key, num_variables, num_samples, obs_noise, lr, args):
+    def __init__(self, seed, num_samples_posterior, model_obs_noise, args):
 
         """
             obs_noise: float
@@ -48,19 +48,19 @@ class BCD:
         logger.addFilter(CheckTypesFilter())
 
         assert 'gpu' in str(jax.devices()).lower()
-        assert isinstance(obs_noise, float)
-
+        assert isinstance(model_obs_noise, float)
+        self.key = jax.random.PRNGKey(seed)
         self.do_ev_noise = args.do_ev_noise
         assert self.do_ev_noise is True # right now only supports equal noise variance since obs_noise and args.data_obs_noise is a float
 
-        self.num_variables = num_variables
-        self.degree = args.num_edges // num_variables
+        self.num_variables = args.num_variables
+        self.degree = args.num_edges // self.num_variables
         self.l_dim = self.num_variables * (self.num_variables - 1) // 2
-        
-        self.lr = lr
-        self.num_samples = num_samples
+        self.num_steps = args.num_steps
+        self.update_freq = args.update_freq
+        self.lr = args.lr
+        self.num_samples_posterior = num_samples_posterior
         self.batch_size = args.batch_size
-
         self.num_flow_layers = args.num_flow_layers
         self.flow_threshold = args.flow_threshold
         self.init_flow_std = args.init_flow_std
@@ -91,8 +91,8 @@ class BCD:
             self.L_states, 
             self.P_opt_params, 
             self.L_opt_params, 
-            rng_key
-                            ) = self._init_params(rng_key)
+            self.rng_key
+                            ) = self._init_params(self.key)
 
         self._set_tau()
         self.ds = GumbelSinkhorn(self.num_variables, noise_type="gumbel", tol=self.max_deviation)
@@ -308,29 +308,29 @@ class BCD:
         return rng_key_2, P_params, L_params, L_states, P_opt_state, L_opt_state
 
     @abstractmethod
-    def train(self, rng_key, data, num_steps):
+    def train(self, data):
         pass
 
 
 class Model(BCD):
-    def __init__(self, rng_key, num_variables, num_samples, obs_noise, lr, args):
-        super(Model, self).__init__(rng_key, num_variables, num_samples, obs_noise, lr, args)
+    def __init__(self, seed, num_samples_posterior, model_obs_noise, args):
+        super(Model, self).__init__(seed, num_samples_posterior, model_obs_noise, args)
     
-    def train(self, rng_key, data, num_steps, update_freq=100):
+    def train(self, data):
         
         data = jnp.array(data)
-        with tqdm(range(num_steps), dynamic_ncols=True) as pbar:
+        with tqdm(range(self.num_steps), dynamic_ncols=True) as pbar:
             for i in pbar:
                 text = colored('Learning q(G, θ, Σ)', 'yellow')
                 pbar.set_description(text)
-                (   rng_key, 
+                (   self.rng_key, 
                     self.P_params, 
                     self.L_params, 
                     self.L_states, 
                     self.P_opt_state, 
                     self.L_opt_state
                                         ) = self.gradient_step(
-                                                            rng_key, 
+                                                            self.rng_key, 
                                                             self.P_params, 
                                                             self.L_params, 
                                                             self.L_states, 
@@ -341,17 +341,17 @@ class Model(BCD):
                 
                 if jnp.any(jnp.isnan(ravel_pytree(self.L_params)[0])):   print("Got NaNs in L params")
 
-                if i % update_freq == 0:
+                if i % self.update_freq == 0:
                     if self.fixed_tau is None:   self.tau = tau_schedule(i)
-                    current_elbo, _ = self.elbo(rng_key, self.P_params, self.L_params, self.L_states, data)
+                    current_elbo, _ = self.elbo(self.rng_key, self.P_params, self.L_params, self.L_states, data)
                     
                     postfix_dict = OrderedDict(
                         ELBO=f"{current_elbo}"
                     )
                     pbar.set_postfix(postfix_dict)
 
-    def sample(self, rng_key, num_posterior_samples):
-        rounds = int(((num_posterior_samples // self.batch_size) + int(num_posterior_samples % self.batch_size != 0)))
+    def sample(self):
+        rounds = int(((self.num_posterior_samples // self.batch_size) + int(self.num_posterior_samples % self.batch_size != 0)))
         posterior_graphs = None
         posterior_thetas = None
         posterior_Sigmas = None
@@ -360,7 +360,7 @@ class Model(BCD):
             for i in pbar:
                 text = colored('Sampling from q(G, θ, Σ)', 'yellow')
                 pbar.set_description(text)
-                rng_key, rng_key_1 = jax.random.split(rng_key, 2)
+                rng_key, rng_key_1 = jax.random.split(self.rng_key, 2)
                 full_l_batch, full_log_prob_l, out_L_states = self.sample_L(rng_key, self.L_params, self.L_states)
                 w_noise = full_l_batch[:, -self.noise_dim:]
                 l_batch = full_l_batch[:, :-self.noise_dim]
@@ -381,6 +381,6 @@ class Model(BCD):
                     posterior_Sigmas = jnp.concatenate((posterior_Sigmas, posterior_Sigma_samples), axis=0)
 
         posterior_graphs = jnp.where(jnp.abs(posterior_thetas) >= self.edge_weight_threshold, 1, 0)
-        return posterior_graphs[:num_posterior_samples], posterior_thetas[:num_posterior_samples], posterior_Sigmas[:num_posterior_samples]
+        return posterior_graphs[:self.num_posterior_samples], posterior_thetas[:self.num_posterior_samples], posterior_Sigmas[:self.num_posterior_samples]
 
 
