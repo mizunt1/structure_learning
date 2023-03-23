@@ -19,20 +19,19 @@ from vbg.gflownet_sl.utils.metrics import posterior_estimate
 
 NormalParameters = namedtuple('NormalParameters', ['mean', 'precision'])
 class Model:
-    def __init__(self, seed, num_samples_posterior, model_obs_noise, args):
-        self.seed = seed
+    def __init__(self, num_samples_posterior, model_obs_noise, args):
         self.num_samples_posterior = num_samples_posterior
         self.model_obs_noise = model_obs_noise
         self.args = args
-        self.key = random.PRNGKey(seed)
-        self.rng = default_rng(seed)
         self.params = None
         self.env_post = None
         self.state_key = None
         self.key = None
         self.edge_params = None
 
-    def train(self, data):
+    def train(self, data, seed):
+        key = random.PRNGKey(seed)
+        rng = default_rng(seed)
         self.data = data
         num_variables = self.data.shape[1]
         scorer_cls = BGeScore
@@ -81,7 +80,7 @@ class Model:
             delta=self.args.delta,
             n_step=self.args.n_step
         )
-        params, state = gflownet.init(self.key, replay.dummy_adjacency)
+        params, state = gflownet.init(key, replay.dummy_adjacency)
 
         # Collect data (using random policy) to start filling the replay buffer
         observations = env.reset()
@@ -134,7 +133,7 @@ class Model:
                         )
                         observations = next_observations
                         state = next_state
-                        samples, subsq_mask = replay.sample(batch_size=self.args.batch_size, rng=self.rng)
+                        samples, subsq_mask = replay.sample(batch_size=self.args.batch_size, rng=rng)
                         params, state, logs = gflownet.step(
                             params,
                             gflownet.target_params,
@@ -162,7 +161,7 @@ class Model:
                 edge_params = new_edge_params
                 for vb_iters in range(self.args.num_vb_updates):
                     if vb_iters == 0:
-                        state = gflownet.reset_optim(state, params, self.key)
+                        state = gflownet.reset_optim(state, params, key)
                         epsilon = jnp.array(0.)
                         # only update epsilon if we are half way through training
                     if iteration > (self.args.num_iterations * self.args.start_to_increase_eps):
@@ -187,7 +186,7 @@ class Model:
                     observations = next_observations
                     state = next_state
 
-                    samples, subsq_mask = replay.sample(batch_size=self.args.batch_size, rng=self.rng)
+                    samples, subsq_mask = replay.sample(batch_size=self.args.batch_size, rng=rng)
                     diff_marg_ll = jax.vmap(
                         compute_delta_score_lingauss_full, in_axes=(0,0,None,None,None,
                                                                     None, None,None))(
@@ -215,7 +214,8 @@ class Model:
         self.env_post = env_post
         self.params = params
 
-    def sample(self):
+    def sample(self, seed):
+        key = random.PRNGKey(seed)
         orders = posterior_estimate(
             self.params,
             self.env_post,
@@ -225,7 +225,7 @@ class Model:
         posterior_graphs = (orders >= 0).astype(np.int_)
         edge_cov = jax.vmap(jnp.linalg.inv, in_axes=-1, out_axes=-1)(self.edge_params.precision)
         posterior_edges = jax.vmap(
-            random.multivariate_normal, in_axes=(None, -1, -1, None),  out_axes=(-1))(self.key,
+            random.multivariate_normal, in_axes=(None, -1, -1, None),  out_axes=(-1))(key,
                                                                                       self.edge_params.mean,
                                                                                       edge_cov, (self.num_samples_posterior,))
 

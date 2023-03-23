@@ -10,24 +10,23 @@ from mcmc_bs.bootstrap.learners import PC, GES
 jax.config.update('jax_platform_name', 'cpu')
 
 class Model:
-    def __init__(self):
-        self.seed = None
-        self.boot = None
-
-    def train(self, data, num_samples_posterior,
-               seed, model_obs_noise, args):
+    def __init__(self, num_samples_posterior, model_obs_noise, args):
         self.num_samples_posterior = num_samples_posterior
+        self.model_obs_noise = model_obs_noise
+        self.args = args
+
+    def train(self, data, seed):
         self.data = data.to_numpy()
         self.seed = seed
         self.key = jax.random.PRNGKey(self.seed) 
-        if args.method == 'ges':
+        if self.args.method == 'ges':
             self.boot = NonparametricDAGBootstrap(
                 learner=GES(),
                 verbose=False,
                 n_restarts=20,  # Default value in DiBS (see dibs/eval/parser.py)
                 no_bootstrap=False  # Default value in DiBS (see dibs/eval/joint_inference.py)
             )
-        elif args.method == 'pc':
+        elif self.args.method == 'pc':
             self.boot = NonparametricDAGBootstrap(
                 learner=PC(
                     ci_test='gaussian',  # Default value in DiBS (see dibs/eval/parser.py)
@@ -40,9 +39,9 @@ class Model:
         else:
             raise NotImplementedError()
 
-    def sample(self):
+    def sample(self, seed):
         g_samples = self.boot.sample_particles(
-        key=jax.random.PRNGKey(self.seed),
+        key=jax.random.PRNGKey(seed),
         n_samples=self.num_samples_posterior,
         x=self.data,
         verbose_indication=100

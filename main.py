@@ -1,7 +1,7 @@
 import os
 from time import time
 import seaborn as sns
-import wandb, pdb
+import wandb
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -35,6 +35,8 @@ def main(args):
         from dibs_model.model import Model
     elif 'mcmc' in args.model:
         from mcmc import Model
+    elif 'bcd' in args.model:
+        from bcd_nets import Model
     else:
         raise Exception("inference method not implemented")
 
@@ -68,9 +70,14 @@ def main(args):
     wandb.save('data_test.csv', policy='now')
     wandb.save('data_train.csv', policy='now')
     start_time = time()
-    model = Model()
-    model_trained = model.train(data, rng, key, args.num_samples_posterior, args.num_variables, args.seed, args.model_obs_noise,  args)
-    posterior_graphs, posterior_edges = model.sample()
+    model = Model(args.num_samples_posterior, args.model_obs_noise, args)
+    model_trained = model.train(data, args.seed)
+    if args.model in ['vbg', 'mcmc', 'bs', 'bcd']:
+        # sampling procedure is stochastic
+        posterior_graphs, posterior_edges = model.sample(args.seed)
+    else:
+        # for dibs sampling procedure is not stochastic
+        posterior_graphs, posterior_edges = model.sample()
     # save posterior samples
     is_dag = elwise_acyclic_constr_nograd(posterior_graphs, args.num_variables) == 0
     posterior_graphs = posterior_graphs[is_dag, :, :]
@@ -271,6 +278,8 @@ if __name__ == '__main__':
     mcmc_parser.add_argument('--method', choices=['mh', 'gibbs'])
     bs_parser = subparsers.add_parser('mcmc')
     bs_parser.add_argument('--method', choices=['ges', 'pc'])
-    
+    bcd_parser = subparsers.add_parser('bcd')
+    bcd_parser.add_argument('--')
+    mcmc_parser = subparsers.add_parser('mcmc')
     args = parser.parse_args()
     main(args)

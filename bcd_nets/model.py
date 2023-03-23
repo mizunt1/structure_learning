@@ -35,7 +35,7 @@ class CheckTypesFilter(logging.Filter):
 
 
 class BCD:
-    def __init__(self, seed, num_samples_posterior, model_obs_noise, args):
+    def __init__(self, num_samples_posterior, model_obs_noise, args):
 
         """
             obs_noise: float
@@ -49,7 +49,8 @@ class BCD:
 
         assert 'gpu' in str(jax.devices()).lower()
         assert isinstance(model_obs_noise, float)
-        self.key = jax.random.PRNGKey(seed)
+        seed = args.key
+        key = jax.random.PRNGKey(seed)
         self.do_ev_noise = args.do_ev_noise
         assert self.do_ev_noise is True # right now only supports equal noise variance since obs_noise and args.data_obs_noise is a float
 
@@ -91,8 +92,8 @@ class BCD:
             self.L_states, 
             self.P_opt_params, 
             self.L_opt_params, 
-            self.rng_key
-                            ) = self._init_params(self.key)
+            key
+                            ) = self._init_params(key)
 
         self._set_tau()
         self.ds = GumbelSinkhorn(self.num_variables, noise_type="gumbel", tol=self.max_deviation)
@@ -313,11 +314,11 @@ class BCD:
 
 
 class Model(BCD):
-    def __init__(self, seed, num_samples_posterior, model_obs_noise, args):
-        super(Model, self).__init__(seed, num_samples_posterior, model_obs_noise, args)
+    def __init__(self, num_samples_posterior, model_obs_noise, args):
+        super(Model, self).__init__(num_samples_posterior, model_obs_noise, args)
     
-    def train(self, data):
-        
+    def train(self, data, seed):
+        key = jax.random.PRNGKey(seed)
         data = jnp.array(data)
         with tqdm(range(self.num_steps), dynamic_ncols=True) as pbar:
             for i in pbar:
@@ -350,17 +351,17 @@ class Model(BCD):
                     )
                     pbar.set_postfix(postfix_dict)
 
-    def sample(self):
+    def sample(self, seed):
+        rng_key = jax.random.PRNGKey(seed)
         rounds = int(((self.num_posterior_samples // self.batch_size) + int(self.num_posterior_samples % self.batch_size != 0)))
         posterior_graphs = None
         posterior_thetas = None
         posterior_Sigmas = None
-
         with tqdm(range(rounds), dynamic_ncols=True, mininterval=5) as pbar:
             for i in pbar:
                 text = colored('Sampling from q(G, θ, Σ)', 'yellow')
                 pbar.set_description(text)
-                rng_key, rng_key_1 = jax.random.split(self.rng_key, 2)
+                rng_key, rng_key_1 = jax.random.split(rng_key, 2)
                 full_l_batch, full_log_prob_l, out_L_states = self.sample_L(rng_key, self.L_params, self.L_states)
                 w_noise = full_l_batch[:, -self.noise_dim:]
                 l_batch = full_l_batch[:, :-self.noise_dim]

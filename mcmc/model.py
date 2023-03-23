@@ -10,11 +10,9 @@ from mcmc_bs.mcmc_joint.joint_structure import MHJointStructureMCMC, GibbsJointS
 jax.config.update('jax_platform_name', 'cpu')
 
 class Model:
-    def __init__(self, seed, num_samples_posterior, model_obs_noise, args):
-        self.seed = seed
+    def __init__(self, num_samples_posterior, model_obs_noise, args):
         self.num_samples_posterior = num_samples_posterior
         self.model_obs_noise = model_obs_noise
-        self.key = jax.random.PRNGKey(self.seed)
         self.method = self.args.method
         self.rng = None
         self.mcmc_run_params = None
@@ -22,8 +20,10 @@ class Model:
         self.num_variables = None
         
 
-    def train(self, data):
+    def train(self, data, seed):
         self.data = data.to_numpy()
+
+    def sample(self, seed):
         model = LinearGaussianGaussianJAX(
         obs_noise=self.model_obs_noise,
         mean_edge=0.,
@@ -46,8 +46,9 @@ class Model:
             'verbose': False,
         }
 
+
         self.mcmc_run_params = {
-            'key': jax.random.PRNGKey(self.seed),
+            'key': jax.random.PRNGKey(seed),
             'n_samples': self.num_samples_posterior,
             'theta_shape': model.get_theta_shape(n_vars=self.num_variables),
             'log_joint_target': ig_log_joint_target,
@@ -61,7 +62,6 @@ class Model:
         else:
             raise NotImplementedError()
 
-    def sample(self):
         g_samples, theta_samples = self.mcmc.sample(
             **self.mcmc_run_params,
             verbose_indication=True
