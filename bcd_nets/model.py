@@ -49,8 +49,9 @@ class BCD:
 
         assert 'gpu' in str(jax.devices()).lower()
         assert isinstance(model_obs_noise, float)
-        seed = args.key
-        key = jax.random.PRNGKey(seed)
+        
+        key = jax.random.PRNGKey(args.seed)
+        self.rng_key = key
         self.do_ev_noise = args.do_ev_noise
         assert self.do_ev_noise is True # right now only supports equal noise variance since obs_noise and args.data_obs_noise is a float
 
@@ -60,12 +61,12 @@ class BCD:
         self.num_steps = args.num_steps
         self.update_freq = args.update_freq
         self.lr = args.lr
+        self.num_samples = args.num_samples_data
         self.num_samples_posterior = num_samples_posterior
         self.batch_size = args.batch_size
         self.num_flow_layers = args.num_flow_layers
         self.flow_threshold = args.flow_threshold
         self.init_flow_std = args.init_flow_std
-        self.num_perm_layers = args.num_perm_layers
         self.use_alternative_horseshoe_tau = args.use_alternative_horseshoe_tau
         self.p_model_hidden_size = args.p_model_hidden_size
         self.num_perm_layers = args.num_perm_layers
@@ -353,7 +354,7 @@ class Model(BCD):
 
     def sample(self, seed):
         rng_key = jax.random.PRNGKey(seed)
-        rounds = int(((self.num_posterior_samples // self.batch_size) + int(self.num_posterior_samples % self.batch_size != 0)))
+        rounds = int(((self.num_samples_posterior // self.batch_size) + int(self.num_samples_posterior % self.batch_size != 0)))
         posterior_graphs = None
         posterior_thetas = None
         posterior_Sigmas = None
@@ -382,6 +383,6 @@ class Model(BCD):
                     posterior_Sigmas = jnp.concatenate((posterior_Sigmas, posterior_Sigma_samples), axis=0)
 
         posterior_graphs = jnp.where(jnp.abs(posterior_thetas) >= self.edge_weight_threshold, 1, 0)
-        return posterior_graphs[:self.num_posterior_samples], posterior_thetas[:self.num_posterior_samples], posterior_Sigmas[:self.num_posterior_samples]
+        return posterior_graphs[:self.num_samples_posterior], posterior_thetas[:self.num_samples_posterior], posterior_Sigmas[:self.num_samples_posterior]
 
 

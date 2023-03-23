@@ -36,7 +36,7 @@ def main(args):
     elif 'mcmc' in args.model:
         from mcmc import Model
     elif 'bcd' in args.model:
-        from bcd_nets import Model
+        from bcd_nets.model import Model
     else:
         raise Exception("inference method not implemented")
 
@@ -273,12 +273,34 @@ if __name__ == '__main__':
     dibs_parser = subparsers.add_parser('dibs')  
     dibs_parser.add_argument('--steps', default=1000, type=int,
                             help='number of training iters')
+    
+    bcd_parser = subparsers.add_parser('bcd')  
+    bcd_parser.add_argument("--do_ev_noise", action="store_false")
+    bcd_parser.add_argument("--num_steps", type=int, default=1000)
+    bcd_parser.add_argument("--update_freq", type=int, default=1000)
+    bcd_parser.add_argument("--lr", type=float, default=1e-3)
+    bcd_parser.add_argument("--batch_size", type=int, default=64)
+    bcd_parser.add_argument("--num_flow_layers", type=int, default=2)
+    bcd_parser.add_argument("--num_perm_layers", type=int, default=2)
+    bcd_parser.add_argument("--init_flow_std", type=float, default=0.1)
+    bcd_parser.add_argument("--use_alternative_horseshoe_tau", action="store_true")
+    bcd_parser.add_argument("--p_model_hidden_size", type=int, default=128)
+    bcd_parser.add_argument("--factorized", action="store_true")
+    bcd_parser.add_argument("--use_flow", action="store_true")
+    bcd_parser.add_argument("--log_stds_max", type=float, default=10.)
+    bcd_parser.add_argument("--max_deviation", type=float, default=0.01)
+    bcd_parser.add_argument("--num_bethe_iters", type=int, default=20)
+    bcd_parser.add_argument("--logit_constraint", type=float, default=10)
+    bcd_parser.add_argument("--s_prior_std", type=float, default=3.0)
+    bcd_parser.add_argument("--subsample", action="store_true")
+    bcd_parser.add_argument("--fixed_tau", type=float, default=0.2)
+    bcd_parser.add_argument("--edge_weight_threshold", type=float, default=0.3)
+    bcd_parser.add_argument("--flow_threshold", type=float, default=-1e3)
 
     mcmc_parser = subparsers.add_parser('mcmc')
     mcmc_parser.add_argument('--method', choices=['mh', 'gibbs'])
     bs_parser = subparsers.add_parser('mcmc')
     bs_parser.add_argument('--method', choices=['ges', 'pc'])
-    bcd_parser = subparsers.add_parser('bcd')
     mcmc_parser = subparsers.add_parser('mcmc')
     args = parser.parse_args()
     main(args)
