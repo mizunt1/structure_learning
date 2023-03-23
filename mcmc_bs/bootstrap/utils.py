@@ -3,7 +3,6 @@ import jax.numpy as jnp
 from jax.ops import index, index_update
 from jax import random
 import networkx as nx
-
 import warnings
 warnings.filterwarnings("ignore", message="No GPU automatically detected")
 
@@ -20,7 +19,7 @@ class ContinualInvalidCPDAGError(Exception):
 
 
 def nx_adjacency(g):
-    return jnp.array(nx.adj_matrix(g).toarray())
+    return jnp.array(nx.adjacency_matrix(g).toarray())
 
 
 def adjmat_to_str(mat, max_len=40):

@@ -8,6 +8,10 @@ def get_weighted_adjacency(graph):
             adjacency[index[u], index[v]] = weight
     return adjacency
 
+def get_adjacency(graph):
+    binary = get_weighted_adjacency(graph) > 0
+    return binary
+
 def edge_marginal_means(means, adjacency_matrices):
     num_variables = adjacency_matrices.shape[1]
     num_matrices =  adjacency_matrices.shape[0]
