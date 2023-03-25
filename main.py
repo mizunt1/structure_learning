@@ -39,7 +39,6 @@ def main(args):
         from bcd_nets.model import Model
     elif 'bs' in args.model:
         from bs.model import Model
-
     else:
         raise Exception("inference method not implemented")
 
@@ -68,6 +67,11 @@ def main(args):
             num_samples=args.num_samples_test,
             rng=rng_2
         )
+    matrix = get_weighted_adjacency(graph)
+    true_graph = sns.heatmap(
+        matrix, cmap="Blues", annot=annot, annot_kws={"size": 16})
+    wandb.log({'true graph': wandb.Image(true_graph)})
+    
     data.to_csv(os.path.join(wandb.run.dir, 'data_train.csv'))
     data_test.to_csv(os.path.join(wandb.run.dir, 'data_test.csv'))
     wandb.save('data_test.csv', policy='now')
