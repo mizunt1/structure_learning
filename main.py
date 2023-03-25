@@ -45,7 +45,11 @@ def main(args):
     rng = default_rng(args.seed)
     rng_2 = default_rng(args.seed + 1000)
     key = random.PRNGKey(args.seed)
-    
+    if args.num_variables > 5:
+        annot = False
+    else:
+        annot = True
+
     if args.graph == 'erdos_renyi_lingauss':
         graph = sample_erdos_renyi_linear_gaussian(
             num_variables=args.num_variables,
@@ -306,6 +310,7 @@ if __name__ == '__main__':
 
     mcmc_parser = subparsers.add_parser('mcmc')
     mcmc_parser.add_argument('--method', choices=['mh', 'gibbs'])
+    mcmc_parser.add_argument('--burnin', type=int, default=10)
     bs_parser = subparsers.add_parser('bs')
     bs_parser.add_argument('--method', choices=['ges', 'pc'])
     args = parser.parse_args()

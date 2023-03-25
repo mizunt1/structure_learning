@@ -17,4 +17,4 @@ pip install --upgrade pip
 
 pip install -r requirements.txt
 pip uninstall -y torch
-python main.py mcmc --method mh
+python main.py --seed 0 mcmc --method mh --burnin 1000
