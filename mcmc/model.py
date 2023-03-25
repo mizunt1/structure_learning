@@ -11,6 +11,7 @@ jax.config.update('jax_platform_name', 'cpu')
 
 class Model:
     def __init__(self, num_samples_posterior, model_obs_noise, args):
+        self.args = args
         self.num_samples_posterior = num_samples_posterior
         self.model_obs_noise = model_obs_noise
         self.method = self.args.method

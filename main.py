@@ -34,9 +34,12 @@ def main(args):
     elif args.model == 'dibs':
         from dibs_model.model import Model
     elif 'mcmc' in args.model:
-        from mcmc import Model
+        from mcmc.model import Model
     elif 'bcd' in args.model:
         from bcd_nets.model import Model
+    elif 'bs' in args.model:
+        from bs.model import Model
+
     else:
         raise Exception("inference method not implemented")
 
@@ -299,8 +302,7 @@ if __name__ == '__main__':
 
     mcmc_parser = subparsers.add_parser('mcmc')
     mcmc_parser.add_argument('--method', choices=['mh', 'gibbs'])
-    bs_parser = subparsers.add_parser('mcmc')
+    bs_parser = subparsers.add_parser('bs')
     bs_parser.add_argument('--method', choices=['ges', 'pc'])
-    mcmc_parser = subparsers.add_parser('mcmc')
     args = parser.parse_args()
     main(args)
