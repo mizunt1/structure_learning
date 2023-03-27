@@ -161,9 +161,9 @@ def main(args):
         # Save full posterior
         with open(os.path.join(wandb.run.dir, 'posterior_full.npz'), 'wb') as f:
             np.savez(f, log_probas=full_posterior.log_probas,
-                **full_posterior.graphs.to_dict(prefix='graphs'),
-                **full_posterior.closures.to_dict(prefix='closures'),
-                **full_posterior.markov.to_dict(prefix='markov')
+                     **full_posterior.graphs.to_dict(prefix='graphs'),
+                     **full_posterior.closures.to_dict(prefix='closures'),
+                     **full_posterior.markov.to_dict(prefix='markov')
             )
         full_edge_log_features = get_edge_log_features(full_posterior)
         full_path_log_features = get_path_log_features(full_posterior)
