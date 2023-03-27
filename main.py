@@ -15,7 +15,6 @@ from utils import get_weighted_adjacency, edge_marginal_means
 from vbg.gflownet_sl.utils.wandb_utils import slurm_infos, table_from_dict, scatter_from_dicts, return_ordered_data
 from vbg.gflownet_sl.metrics.metrics import LL, expected_shd, threshold_metrics, expected_edges
 from vbg.gflownet_sl.utils.metrics import get_log_features
-from dibs.graph_utils import elwise_acyclic_constr_nograd
 from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
     get_edge_log_features, get_path_log_features, get_markov_blanket_log_features)
 
@@ -90,10 +89,6 @@ def main(args):
         # for dibs sampling procedure is not stochastic
         posterior_graphs, posterior_edges, sigmas = model.sample()
     # save posterior samples
-    is_dag = elwise_acyclic_constr_nograd(posterior_graphs, args.num_variables) == 0
-    posterior_graphs = posterior_graphs[is_dag, :, :]
-    posterior_edges = posterior_edges[is_dag, :, :]
-
     with open(os.path.join(wandb.run.dir, 'posterior_graphs.npy'), 'wb') as f:
         np.save(f, posterior_graphs)
     wandb.save('posterior_graphs.npy', policy='now')
@@ -288,7 +283,7 @@ if __name__ == '__main__':
     bcd_parser = subparsers.add_parser('bcd')  
     bcd_parser.add_argument("--do_ev_noise", action="store_false")
     bcd_parser.add_argument("--num_steps", type=int, default=1000)
-    bcd_parser.add_argument("--update_freq", type=int, default=1000)
+    bcd_parser.add_argument("--update_freq", type=int, default=200)
     bcd_parser.add_argument("--lr", type=float, default=1e-3)
     bcd_parser.add_argument("--batch_size", type=int, default=64)
     bcd_parser.add_argument("--num_flow_layers", type=int, default=2)

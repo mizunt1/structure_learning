@@ -1,10 +1,5 @@
-from functools import partial, wraps
-import jax.numpy as jnp
 import jax
-from jax import random, jit, vmap
-import haiku as hk
-from abc import ABC, abstractmethod
-from typing import Optional, Mapping, Type, Callable, Iterable, Any, Sequence, Union, Tuple, MutableMapping, NamedTuple, Set, TypeVar
+from typing import Optional, Any, Union, MutableMapping, NamedTuple, Set
 import collections
 import contextlib
 
@@ -17,14 +12,12 @@ from haiku._src.base import ThreadLocalStack, \
                             MutableParams, \
                             MutableState, \
                             PRNGSequence, \
-                            Frame, \
                             frame_stack, \
                             extract_state, \
                             Stack, \
                             ModuleState, \
                             StatePair, \
-                            current_frame, \
-                            current_bundle_name
+                            current_frame
 from haiku._src.typing import PRNGKey, Params, State
 from haiku._src import data_structures
 
@@ -182,41 +175,41 @@ def new_custom_context(*,
 
 ################################################################################################################
 
-def get_constant(name: str,
-                 value: Any=None,
-                 init=None,
-                 do_not_set=False):
-  constants = current_frame().constants[current_bundle_name()]
-  saved_value = constants.get(name, None)
-  if saved_value is None:
-    if do_not_set:
-      return None
+# def get_constant(name: str,
+#                  value: Any=None,
+#                  init=None,
+#                  do_not_set=False):
+#   constants = current_frame().constants[current_bundle_name()]
+#   saved_value = constants.get(name, None)
+#   if saved_value is None:
+#     if do_not_set:
+#       return None
 
-    if init is not None:
-      value = init(value)
-      constants[name] = value
-    else:
-      constants[name] = value
-  else:
-    assert name in constants, f"Missing {name} in constants"
-    value = saved_value
+#     if init is not None:
+#       value = init(value)
+#       constants[name] = value
+#     else:
+#       constants[name] = value
+#   else:
+#     assert name in constants, f"Missing {name} in constants"
+#     value = saved_value
 
-  return value
+#   return value
 
 ################################################################################################################
 
-def get_tree_shapes(name: str,
-                    pytree: Any=None,
-                    batch_axes: Optional[Sequence[int]] = (),
-                    do_not_set: Optional[bool] = False,
-) -> Any:
+# def get_tree_shapes(name: str,
+#                     pytree: Any=None,
+#                     batch_axes: Optional[Sequence[int]] = (),
+#                     do_not_set: Optional[bool] = False,
+# ) -> Any:
 
-  def get_unbatched_shape(x):
-    x_shape = [s for i, s in enumerate(x.shape) if i not in batch_axes]
-    x_shape = tuple(x_shape)
-    return x_shape
+#   def get_unbatched_shape(x):
+#     x_shape = [s for i, s in enumerate(x.shape) if i not in batch_axes]
+#     x_shape = tuple(x_shape)
+#     return x_shape
 
-  def apply_get_shapes(x):
-    return jax.tree_map(get_unbatched_shape, x)
+#   def apply_get_shapes(x):
+#     return jax.tree_map(get_unbatched_shape, x)
 
-  return get_constant(name, pytree, init=apply_get_shapes, do_not_set=do_not_set)
+#   return get_constant(name, pytree, init=apply_get_shapes, do_not_set=do_not_set)
