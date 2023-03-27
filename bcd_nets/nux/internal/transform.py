@@ -1,12 +1,7 @@
-from functools import partial, wraps
 import jax.numpy as jnp
-import jax
-from jax import random, jit, vmap
 import haiku as hk
-from abc import ABC, abstractmethod
-import warnings
-from typing import Optional, Mapping, Type, Callable, Iterable, Any, Sequence, Union, Tuple, MutableMapping, NamedTuple, Set, TypeVar
-from nux.internal.base import get_constant, new_custom_context
+from typing import Optional, Mapping, Any, Union, Tuple
+from nux.internal.base import new_custom_context
 from nux.internal.layer import Layer
 from haiku._src.typing import PRNGKey, Params, State
 from haiku._src.transform import TransformedWithState, \

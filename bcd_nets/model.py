@@ -19,7 +19,7 @@ import optax
 from functools import partial
 from tensorflow_probability.substrates.jax.distributions import Normal, Horseshoe
 
-from bcd_nets.flows import get_flow_CIF
+# from bcd_nets.flows import get_flow_CIF
 from doubly_stochastic import GumbelSinkhorn
 from utils import ff2, num_params, tau_schedule, lower, diag, get_W, get_p_model
 
@@ -358,7 +358,7 @@ class Model(BCD):
         posterior_graphs = None
         posterior_thetas = None
         posterior_Sigmas = None
-        with tqdm(range(rounds), dynamic_ncols=True, mininterval=5) as pbar:
+        with tqdm(range(rounds), dynamic_ncols=True, mininterval=1) as pbar:
             for i in pbar:
                 text = colored('Sampling from q(G, θ, Σ)', 'yellow')
                 pbar.set_description(text)
