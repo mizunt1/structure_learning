@@ -1,6 +1,10 @@
 from dibs.inference import JointDiBS
 from dibs.target import make_linear_gaussian_model
 import jax.random as random
+import jax.numpy as jnp
+
+def uniform_prior():
+    return jnp.array(0.0)
 
 class Model:
     def __init__(self, num_samples_posterior, model_obs_noise, args):
@@ -17,7 +21,8 @@ class Model:
         self.num_variables  = data.shape[1]
         _, model = make_linear_gaussian_model(key=subk, n_vars=self.num_variables, obs_noise=self.model_obs_noise)
         # sample 10 DAG and parameter particles from the joint posterior
-        self.dibs = JointDiBS(x=data.to_numpy(), interv_mask=None, inference_model=model)
+        self.dibs = JointDiBS(x=data.to_numpy(), interv_mask=None,
+                              inference_model=model, log_graph_prior=uniform_prior)
         self.gs, self.thetas = self.dibs.sample(key=subk, n_particles=self.num_samples_posterior, steps=self.steps)
 
     def sample(self):
