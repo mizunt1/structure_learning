@@ -15,6 +15,8 @@ class Model:
         self.steps = args.steps
         self.gs = None
         self.thetas = None
+        self.args = args
+        self.plus = args.plus
 
     def train(self, data, seed):
         key = random.PRNGKey(seed)
@@ -26,8 +28,14 @@ class Model:
         self.dibs = JointDiBS(x=data.to_numpy(), interv_mask=None,
                               inference_model=model)
         self.gs, self.thetas = self.dibs.sample(key=subk, n_particles=self.num_samples_posterior, steps=self.steps)
-
+        
     def sample(self):
+        if self.plus:
+            dist = self.dibs.get_mixture(self.gs, self.thetas)
+        else:
+            dist = self.dibs.get_empirical(self.gs, self.thetas)
+        self.gs = dist.g
+        self.theta = dist.theta
         is_dag = elwise_acyclic_constr_nograd(self.gs, self.num_variables) == 0
         posterior_graphs = self.gs[is_dag, :, :]
         posterior_thetas = self.thetas[is_dag, :, :]

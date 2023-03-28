@@ -288,7 +288,9 @@ if __name__ == '__main__':
     dibs_parser = subparsers.add_parser('dibs')  
     dibs_parser.add_argument('--steps', default=1000, type=int,
                             help='number of training iters')
-    
+    dibs_parser.add_argument('--plus', action='store_true',
+                            help='using dibs plus')
+        
     bcd_parser = subparsers.add_parser('bcd')  
     bcd_parser.add_argument("--do_ev_noise", action="store_false")
     bcd_parser.add_argument("--num_steps", type=int, default=1000)
