@@ -23,7 +23,7 @@ from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
 
 def main(args):
     wandb.init(
-        project='structure learning',
+        project='test',
         settings=wandb.Settings(start_method='fork')
     )
     wandb.config.update(args)
@@ -127,7 +127,11 @@ def main(args):
     wandb.log({'edge marginals': wandb.Image(edge_m_plot)})
 
         # log likelihood of unseen data given model of graph
-    log_like = -1*LL(posterior_graphs, posterior_edges, data_test.to_numpy(), sigma=np.sqrt(args.model_obs_noise))
+    if args.model == 'bcd':
+        mean_sigma_pred = sigmas[:,0,0].mean()
+        log_like = -1*LL(posterior_graphs, posterior_edges, data_test.to_numpy(), sigma=np.sqrt(mean_sigma_pred))
+    else:
+        log_like = -1*LL(posterior_graphs, posterior_edges, data_test.to_numpy(), sigma=np.sqrt(args.model_obs_noise))
     wandb.run.summary.update({"negative log like": log_like})
 
     # Compute metrics on the posterior estimate
@@ -151,8 +155,13 @@ def main(args):
     if (args.graph in ['erdos_renyi_lingauss']) and (args.num_variables < 6):
         # Default values set by data generation
         # See `sample_erdos_renyi_linear_gaussian` above
-        full_posterior = get_full_posterior(
-            data, score='lingauss', verbose=True, prior_mean=0., prior_scale=1., obs_scale=args.model_obs_noise)
+        if args.model == 'bcd':
+            full_posterior = get_full_posterior(
+                data, score='lingauss', verbose=True, prior_mean=0., prior_scale=1., obs_scale=mean_sigma_pred)
+        else:
+            full_posterior = get_full_posterior(
+                data, score='lingauss', verbose=True, prior_mean=0., prior_scale=1., obs_scale=args.model_obs_noise)
+
         # Save full posterior
         with open(os.path.join(wandb.run.dir, 'posterior_full.npz'), 'wb') as f:
             np.savez(f, log_probas=full_posterior.log_probas,
