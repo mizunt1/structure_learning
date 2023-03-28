@@ -23,7 +23,7 @@ from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
 
 def main(args):
     wandb.init(
-        project='test',
+        project='dibs_arxiv2_n5',
         settings=wandb.Settings(start_method='fork')
     )
     wandb.config.update(args)
