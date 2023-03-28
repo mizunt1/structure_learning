@@ -30,5 +30,5 @@ class Model:
     def sample(self):
         is_dag = elwise_acyclic_constr_nograd(self.gs, self.num_variables) == 0
         posterior_graphs = self.gs[is_dag, :, :]
-        posterior_thetas = posterior_thetas[is_dag, :, :]
+        posterior_thetas = self.thetas[is_dag, :, :]
         return posterior_graphs, posterior_thetas, None
