@@ -24,7 +24,7 @@ class Model:
                                               graph_prior_str='unif')
         # sample 10 DAG and parameter particles from the joint posterior
         self.dibs = JointDiBS(x=data.to_numpy(), interv_mask=None,
-                              inference_model=model, log_graph_prior=uniform_prior)
+                              inference_model=model)
         self.gs, self.thetas = self.dibs.sample(key=subk, n_particles=self.num_samples_posterior, steps=self.steps)
 
     def sample(self):
