@@ -11,4 +11,4 @@ module load python/3.9
 module load cuda/11.2/cudnn/8.1
 module load singularity/3.7.1
 
-singularity exec --nv sl_img.simg python3 main.py bs --method pc
+singularity exec sl_img.simg python3 main.py bs --method pc

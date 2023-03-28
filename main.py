@@ -15,7 +15,6 @@ from utils import get_weighted_adjacency, edge_marginal_means
 from vbg.gflownet_sl.utils.wandb_utils import slurm_infos, table_from_dict, scatter_from_dicts, return_ordered_data
 from vbg.gflownet_sl.metrics.metrics import LL, expected_shd, threshold_metrics, expected_edges
 from vbg.gflownet_sl.utils.metrics import get_log_features
-from dibs.graph_utils import elwise_acyclic_constr_nograd
 from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
     get_edge_log_features, get_path_log_features, get_markov_blanket_log_features)
 
@@ -34,16 +33,22 @@ def main(args):
     elif args.model == 'dibs':
         from dibs_model.model import Model
     elif 'mcmc' in args.model:
-        from mcmc import Model
+        from mcmc.model import Model
     elif 'bcd' in args.model:
-        from bcd_nets import Model
+        from bcd_nets.model import Model
+    elif 'bs' in args.model:
+        from bs.model import Model
     else:
         raise Exception("inference method not implemented")
 
     rng = default_rng(args.seed)
     rng_2 = default_rng(args.seed + 1000)
     key = random.PRNGKey(args.seed)
-    
+    if args.num_variables > 5:
+        annot = False
+    else:
+        annot = True
+
     if args.graph == 'erdos_renyi_lingauss':
         graph = sample_erdos_renyi_linear_gaussian(
             num_variables=args.num_variables,
@@ -65,6 +70,11 @@ def main(args):
             num_samples=args.num_samples_test,
             rng=rng_2
         )
+    matrix = get_weighted_adjacency(graph)
+    true_graph = sns.heatmap(
+        matrix, cmap="Blues", annot=annot, annot_kws={"size": 16})
+    wandb.log({'true graph': wandb.Image(true_graph)})
+    
     data.to_csv(os.path.join(wandb.run.dir, 'data_train.csv'))
     data_test.to_csv(os.path.join(wandb.run.dir, 'data_test.csv'))
     wandb.save('data_test.csv', policy='now')
@@ -74,15 +84,11 @@ def main(args):
     model_trained = model.train(data, args.seed)
     if args.model in ['vbg', 'mcmc', 'bs', 'bcd']:
         # sampling procedure is stochastic
-        posterior_graphs, posterior_edges = model.sample(args.seed)
+        posterior_graphs, posterior_edges, sigmas = model.sample(args.seed)
     else:
         # for dibs sampling procedure is not stochastic
-        posterior_graphs, posterior_edges = model.sample()
+        posterior_graphs, posterior_edges, sigmas = model.sample()
     # save posterior samples
-    is_dag = elwise_acyclic_constr_nograd(posterior_graphs, args.num_variables) == 0
-    posterior_graphs = posterior_graphs[is_dag, :, :]
-    posterior_edges = posterior_edges[is_dag, :, :]
-
     with open(os.path.join(wandb.run.dir, 'posterior_graphs.npy'), 'wb') as f:
         np.save(f, posterior_graphs)
     wandb.save('posterior_graphs.npy', policy='now')
@@ -150,9 +156,9 @@ def main(args):
         # Save full posterior
         with open(os.path.join(wandb.run.dir, 'posterior_full.npz'), 'wb') as f:
             np.savez(f, log_probas=full_posterior.log_probas,
-                **full_posterior.graphs.to_dict(prefix='graphs'),
-                **full_posterior.closures.to_dict(prefix='closures'),
-                **full_posterior.markov.to_dict(prefix='markov')
+                     **full_posterior.graphs.to_dict(prefix='graphs'),
+                     **full_posterior.closures.to_dict(prefix='closures'),
+                     **full_posterior.markov.to_dict(prefix='markov')
             )
         full_edge_log_features = get_edge_log_features(full_posterior)
         full_path_log_features = get_path_log_features(full_posterior)
@@ -273,13 +279,34 @@ if __name__ == '__main__':
     dibs_parser = subparsers.add_parser('dibs')  
     dibs_parser.add_argument('--steps', default=1000, type=int,
                             help='number of training iters')
+    
+    bcd_parser = subparsers.add_parser('bcd')  
+    bcd_parser.add_argument("--do_ev_noise", action="store_false")
+    bcd_parser.add_argument("--num_steps", type=int, default=1000)
+    bcd_parser.add_argument("--update_freq", type=int, default=200)
+    bcd_parser.add_argument("--lr", type=float, default=1e-3)
+    bcd_parser.add_argument("--batch_size", type=int, default=64)
+    bcd_parser.add_argument("--num_flow_layers", type=int, default=2)
+    bcd_parser.add_argument("--num_perm_layers", type=int, default=2)
+    bcd_parser.add_argument("--init_flow_std", type=float, default=0.1)
+    bcd_parser.add_argument("--use_alternative_horseshoe_tau", action="store_true")
+    bcd_parser.add_argument("--p_model_hidden_size", type=int, default=128)
+    bcd_parser.add_argument("--factorized", action="store_true")
+    bcd_parser.add_argument("--use_flow", action="store_true")
+    bcd_parser.add_argument("--log_stds_max", type=float, default=10.)
+    bcd_parser.add_argument("--max_deviation", type=float, default=0.01)
+    bcd_parser.add_argument("--num_bethe_iters", type=int, default=20)
+    bcd_parser.add_argument("--logit_constraint", type=float, default=10)
+    bcd_parser.add_argument("--s_prior_std", type=float, default=3.0)
+    bcd_parser.add_argument("--subsample", action="store_true")
+    bcd_parser.add_argument("--fixed_tau", type=float, default=0.2)
+    bcd_parser.add_argument("--edge_weight_threshold", type=float, default=0.3)
+    bcd_parser.add_argument("--flow_threshold", type=float, default=-1e3)
 
     mcmc_parser = subparsers.add_parser('mcmc')
     mcmc_parser.add_argument('--method', choices=['mh', 'gibbs'])
-    bs_parser = subparsers.add_parser('mcmc')
+    mcmc_parser.add_argument('--burnin', type=int, default=10)
+    bs_parser = subparsers.add_parser('bs')
     bs_parser.add_argument('--method', choices=['ges', 'pc'])
-    bcd_parser = subparsers.add_parser('bcd')
-    bcd_parser.add_argument('--')
-    mcmc_parser = subparsers.add_parser('mcmc')
     args = parser.parse_args()
     main(args)

@@ -1,22 +1,13 @@
-from functools import partial, wraps
+from functools import partial
 import jax.numpy as jnp
 import jax
-from jax import random, jit, vmap
+from jax import random, jit
 import warnings
 from typing import (
     Optional,
     Mapping,
-    Type,
     Callable,
-    Iterable,
-    Any,
-    Sequence,
-    Union,
-    Tuple,
-    MutableMapping,
-    NamedTuple,
-    Set,
-    TypeVar,
+    Sequence
 )
 import nux.util as util
 from haiku._src.typing import PRNGKey, Params, State

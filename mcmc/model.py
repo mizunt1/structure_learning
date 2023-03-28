@@ -19,6 +19,7 @@ class Model:
         self.mcmc_run_params = None
         self.mcmc = None
         self.num_variables = None
+        self.burnin = args.burnin
         
 
     def train(self, data, seed):
@@ -53,7 +54,7 @@ class Model:
             'n_samples': self.num_samples_posterior,
             'theta_shape': model.get_theta_shape(n_vars=self.num_variables),
             'log_joint_target': ig_log_joint_target,
-            'burnin': 10,  # Default value in DiBS (see config/baselines.py)
+            'burnin': self.burnin,  # Default value in DiBS (see config/baselines.py)
             'thinning': 10  # Default value in DiBS (see config/baselines.py)
         }
         if self.method == 'mh':

@@ -1,13 +1,8 @@
-#!/bin/sh
-
-module unload anaconda
-module load python/3.9
-module list cudatoolkit/11.1
-
-python -m venv $SLURM_TMPDIR/venv
-source $SLURM_TMPDIR/venv/bin/activate
-
-pip install --upgrade pip
+#!/bin/bash
+module load anaconda/3
+module load cudatoolkit/11.1
+conda create -n baseline_bcd_env python=3.9
+conda activate baseline_bcd_env
 pip install "jax[cuda]<=0.2.25" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 pip install "jax[cuda]<=0.2.20" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 pip install cdt==0.5.23 optax==0.0.9 chex==0.0.8 tensorflow_probability==0.13.0 tqdm wandb
