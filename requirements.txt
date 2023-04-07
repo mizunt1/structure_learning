@@ -7,8 +7,6 @@ tqdm==4.65.0
 gym==0.26.2
 pandas==1.5.3
 dm-haiku==0.0.9
-dibs-lib==1.2.0
 networkx==3.0
 scikit-learn==1.2.2
 pgmpy==0.1.21
-dibs-lib
