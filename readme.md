@@ -1,8 +1,8 @@
 # Structure learning benchmarks
 
-This is a repository that includes several Bayesian structure learning methods, data generation from linear Gaussian DAGs, and several metrics to compare their efficacy. 
-This codebase was developed by [Jithendaraa Subramanian](https://jithendaraa.github.io/) and [Mizu Nishikawa-Toomey](https://mizunt1.github.io/).
-We wanted to create a centralised repository of causal structure learning methods and metrics which are easy to access and use. 
+This is a repository that includes several Bayesian structure learning methods, data generation from linear Gaussian DAGs, and several metrics to compare their efficacy.\
+This codebase was developed by [Jithendaraa Subramanian](https://jithendaraa.github.io/) and [Mizu Nishikawa-Toomey](https://mizunt1.github.io/).\
+We wanted to create a centralised repository of causal structure learning methods and metrics which are easy to access and use. \
 If you have a causal structure learning algorithm which you would like to add to the repository, please feel free to reach to build on the codebase. 
 
 Set up instructions for creating an environment that works for dibs, vbg and mcmc methods : 
