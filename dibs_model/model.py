@@ -23,7 +23,7 @@ class Model:
         key, subk = random.split(key)
         self.num_variables  = data.shape[1]
         _, model = make_linear_gaussian_model(key=subk, n_vars=self.num_variables, obs_noise=self.model_obs_noise,
-                                              graph_prior_str='unif')
+                                              graph_prior_str='er')
         # sample 10 DAG and parameter particles from the joint posterior
         self.dibs = JointDiBS(x=data.to_numpy(), interv_mask=None,
                               inference_model=model)

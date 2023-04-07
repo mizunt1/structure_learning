@@ -23,7 +23,7 @@ from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
 
 def main(args):
     wandb.init(
-        project='dibs_arxiv2_n5',
+        project=args.name,
         settings=wandb.Settings(start_method='fork')
     )
     wandb.config.update(args)
@@ -244,7 +244,9 @@ if __name__ == '__main__':
         help='Number of samples for the posterior estimate (default: %(default)s)')
     parser.add_argument('--model_obs_noise', type=float, default=0.1,
                         help='likelihood variance in approximate posterior')
-    
+    parser.add_argument('--name', type=str, default='test',
+                        help='project name for wandb')
+
     # VBG args
     vbg_parser.add_argument('--batch_size', type=int, default=32,
                             help='Batch size (default: %(default)s)')
@@ -272,7 +274,7 @@ if __name__ == '__main__':
                             help='Use Prioritized Experience Replay')
     vbg_parser.add_argument('--min_exploration', type=float, default=0.1,
                             help='Minimum value of epsilon-exploration (default: %(default)s)')
-    vbg_parser.add_argument('--start_to_increase_eps', type=float, default=0.5,
+    vbg_parser.add_argument('--start_to_increase_eps', type=float, default=0.1,
                             help='the fraction of training iters to start increasing epsilon')
     vbg_parser.add_argument('--num_workers', type=int, default=4,
                             help='Number of workers (default: %(default)s)')
@@ -290,7 +292,9 @@ if __name__ == '__main__':
                             help='number of training iters')
     dibs_parser.add_argument('--plus', action='store_true',
                             help='using dibs plus')
-        
+    dibs_parser.add_argument('--prior_str', default='uni', type=str,
+                             help='dibs prior, uni for uniform, er for erdos renri, sf for scale free')
+
     bcd_parser = subparsers.add_parser('bcd')  
     bcd_parser.add_argument("--do_ev_noise", action="store_false")
     bcd_parser.add_argument("--num_steps", type=int, default=1000)
