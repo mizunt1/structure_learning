@@ -17,13 +17,14 @@ class Model:
         self.thetas = None
         self.args = args
         self.plus = args.plus
-
+        self.args.prior_str = prior_str
+        
     def train(self, data, seed):
         key = random.PRNGKey(seed)
         key, subk = random.split(key)
         self.num_variables  = data.shape[1]
         _, model = make_linear_gaussian_model(key=subk, n_vars=self.num_variables, obs_noise=self.model_obs_noise,
-                                              graph_prior_str='er')
+                                              graph_prior_str=prior_str)
         # sample 10 DAG and parameter particles from the joint posterior
         self.dibs = JointDiBS(x=data.to_numpy(), interv_mask=None,
                               inference_model=model)
