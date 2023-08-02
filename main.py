@@ -9,7 +9,9 @@ import sklearn as sk
 from jax import random 
 from numpy.random import default_rng
 from argparse import ArgumentParser
+import pandas as pd
 
+from pgmpy.utils import get_example_model
 from data_generation import sample_erdos_renyi_linear_gaussian, sample_from_linear_gaussian
 from utils import get_weighted_adjacency, edge_marginal_means
 from vbg.gflownet_sl.utils.wandb_utils import slurm_infos, table_from_dict, scatter_from_dicts, return_ordered_data
@@ -70,11 +72,30 @@ def main(args):
             num_samples=args.num_samples_test,
             rng=rng_2
         )
-    matrix = get_weighted_adjacency(graph)
+        has_edge_weights = True
+    if args.graph == 'sachs':
+        graph = get_example_model('sachs')
+        # http://bioinfo.ipmb.uni-heidelberg.de/crg/seminar-network/bnTutorial.html
+        data = pd.read_csv(
+            'data/sachs.data.txt',
+            delimiter='\t',
+            dtype=np.float_
+        )
+        # Standardize data
+        data = (data - data.mean()) / data.std()
+        has_edge_weights = False
+        test_amount = len(data)//3
+        data_test = data[0:test_amount]
+        data = data[test_amount:]
+    if has_edge_weights:
+        weighted_adj = get_weighted_adjacency(graph)
+    else:
+        weighted_adj = np.ones((graph.number_of_nodes(), graph.number_of_nodes()))
     true_graph = sns.heatmap(
-        matrix, cmap="Blues", annot=annot, annot_kws={"size": 16})
+        weighted_adj, cmap="Blues", annot=annot, annot_kws={"size": 16})
     wandb.log({'true graph': wandb.Image(true_graph)})
     
+
     data.to_csv(os.path.join(wandb.run.dir, 'data_train.csv'))
     data_test.to_csv(os.path.join(wandb.run.dir, 'data_test.csv'))
     wandb.save('data_test.csv', policy='now')
@@ -99,7 +120,6 @@ def main(args):
     time_elapsed = time() - start_time
     time_in_hrs = time_elapsed / (60*60)
     wandb.log({'time in hrs': time_in_hrs})
-    weighted_adj = get_weighted_adjacency(graph)
     binary_adj = weighted_adj > 0
     posterior_edges_mean = np.mean(posterior_edges, axis=0)
     if args.num_variables > 5:
@@ -224,14 +244,13 @@ if __name__ == '__main__':
     parser.add_argument('--num_edges', type=int, default=5,
         help='Average number of parents (default: %(default)s)')
     parser.add_argument('--graph', type=str, default='erdos_renyi_lingauss',
-                        choices=['erdos_renyi_lingauss'], help='Type of graph (default: %(default)s)')
+                        choices=['erdos_renyi_lingauss', 'sachs'], help='Type of graph (default: %(default)s)')
     parser.add_argument('--data_obs_noise', type=float, default=0.1,
                         help='likelihood variance in data generation')
     parser.add_argument('--scale_edges', type=float, default=2.0,
                         help='upper limit for edge scale')
     parser.add_argument('--low_edges', type=float, default=0.5,
                         help='lower limit for edge scale')
-
     # data generation
     parser.add_argument('--seed', type=int, default=0,
         help='Random seed (default: %(default)s)')
