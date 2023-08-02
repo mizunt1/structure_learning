@@ -3,7 +3,7 @@ import string
 import numpy as np
 from numpy.random import default_rng
 
-from gflownet_sl.utils.graph import sample_erdos_renyi_linear_gaussian
+from vbg.gflownet_sl.utils.graph import sample_erdos_renyi_linear_gaussian
 
 let_num = {letter: index for index, letter in enumerate(string.ascii_uppercase, start=0)} 
 
@@ -27,6 +27,17 @@ def graph_to_matrix(graph, num_nodes):
             theta = graph.get_cpds(child[0]).mean[n+1]
             matrix[let_num[parent]][let_num[child[0]]] = theta
     return matrix
+
+def graph_to_matrix_sachs(graph, columns):
+    let_num = {name: idx for idx, name in enumerate(columns, start=0)}
+    num_nodes = graph.number_of_nodes()
+    matrix = np.zeros((num_nodes, num_nodes))
+    for child in graph.adjacency():
+        # adj shows child of node
+        for n, parent in enumerate(graph.get_parents(child[0])):        
+            matrix[let_num[parent]][let_num[child[0]]] = 1
+    return matrix
+
 def get_weighted_adjacency(graph):
     adjacency = np.zeros((len(graph), len(graph)), dtype=np.float_)
     index = dict((node, idx) for (idx, node) in enumerate(graph.nodes))

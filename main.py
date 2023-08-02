@@ -19,6 +19,7 @@ from vbg.gflownet_sl.metrics.metrics import LL, expected_shd, threshold_metrics,
 from vbg.gflownet_sl.utils.metrics import get_log_features
 from vbg.gflownet_sl.utils.exhaustive import (get_full_posterior,
     get_edge_log_features, get_path_log_features, get_markov_blanket_log_features)
+from vbg.gflownet_sl.utils.graph_plot import graph_to_matrix_sachs
 
 # note run with generic then model specific arg parse
 # eg python main.py --num_samples_posterior 100 vbg --num_iterations 2 --num_vb_updates 100
@@ -74,13 +75,14 @@ def main(args):
         )
         has_edge_weights = True
     if args.graph == 'sachs':
-        graph = get_example_model('sachs')
         # http://bioinfo.ipmb.uni-heidelberg.de/crg/seminar-network/bnTutorial.html
         data = pd.read_csv(
             'data/sachs.data.txt',
             delimiter='\t',
             dtype=np.float_
         )
+        graph = get_example_model('sachs')
+        adj = graph_to_matrix_sachs(graph, data.columns)
         # Standardize data
         data = (data - data.mean()) / data.std()
         has_edge_weights = False
@@ -90,7 +92,7 @@ def main(args):
     if has_edge_weights:
         weighted_adj = get_weighted_adjacency(graph)
     else:
-        weighted_adj = np.ones((graph.number_of_nodes(), graph.number_of_nodes()))
+        weighted_adj = adj
     true_graph = sns.heatmap(
         weighted_adj, cmap="Blues", annot=annot, annot_kws={"size": 16})
     wandb.log({'true graph': wandb.Image(true_graph)})
