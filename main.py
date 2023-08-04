@@ -44,14 +44,10 @@ def main(args):
     else:
         raise Exception("inference method not implemented")
 
+    
     rng = default_rng(args.seed)
     rng_2 = default_rng(args.seed + 1000)
     key = random.PRNGKey(args.seed)
-    if args.num_variables > 5:
-        annot = False
-    else:
-        annot = True
-
     if args.graph == 'erdos_renyi_lingauss':
         graph = sample_erdos_renyi_linear_gaussian(
             num_variables=args.num_variables,
@@ -89,6 +85,15 @@ def main(args):
         test_amount = len(data)//3
         data_test = data[0:test_amount]
         data = data[test_amount:]
+
+    if args.graph == 'sachs':
+        args.num_variables = 11
+        args.num_samples_data = len(data)
+    if args.num_variables > 5:
+        annot = False
+    else:
+        annot = True
+
     if has_edge_weights:
         weighted_adj = get_weighted_adjacency(graph)
     else:
@@ -309,7 +314,7 @@ if __name__ == '__main__':
                             help='do not increase epsilon over time')
 
     dibs_parser = subparsers.add_parser('dibs')  
-    dibs_parser.add_argument('--steps', default=1000, type=int,
+    dibs_parser.add_argument('--steps', default=3000, type=int,
                             help='number of training iters')
     dibs_parser.add_argument('--plus', action='store_true',
                             help='using dibs plus')
@@ -320,7 +325,7 @@ if __name__ == '__main__':
     bcd_parser.add_argument("--do_ev_noise", action="store_false")
     bcd_parser.add_argument("--num_steps", type=int, default=1000)
     bcd_parser.add_argument("--update_freq", type=int, default=200)
-    bcd_parser.add_argument("--lr", type=float, default=1e-3)
+    bcd_parser.add_argument("--lr", type=float, default=1e-4)
     bcd_parser.add_argument("--batch_size", type=int, default=64)
     bcd_parser.add_argument("--num_flow_layers", type=int, default=2)
     bcd_parser.add_argument("--num_perm_layers", type=int, default=2)
