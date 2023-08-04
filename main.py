@@ -89,6 +89,7 @@ def main(args):
         test_amount = len(data)//3
         data_test = data[0:test_amount]
         data = data[test_amount:]
+        
     if has_edge_weights:
         weighted_adj = get_weighted_adjacency(graph)
     else:
@@ -309,12 +310,14 @@ if __name__ == '__main__':
                             help='do not increase epsilon over time')
 
     dibs_parser = subparsers.add_parser('dibs')  
-    dibs_parser.add_argument('--steps', default=1000, type=int,
+    dibs_parser.add_argument('--steps', default=3000, type=int,
                             help='number of training iters')
     dibs_parser.add_argument('--plus', action='store_true',
                             help='using dibs plus')
     dibs_parser.add_argument('--prior_str', default='uni', type=str,
                              help='dibs prior, uni for uniform, er for erdos renri, sf for scale free')
+    dibs_parser.add_argument('--marginal', action='store_true',
+                            help='using dibs marginal')
 
     bcd_parser = subparsers.add_parser('bcd')  
     bcd_parser.add_argument("--do_ev_noise", action="store_false")
