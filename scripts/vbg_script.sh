@@ -9,7 +9,5 @@ WANDB_API_KEY=$17a113b4804951bde9c66b2002fe378c0209fb64
 WANDB_ENTITY=$mizunt
 module load anaconda/3
 module load cudatoolkit/11.1
-conda create -n envname python=3.10
-conda install jax cuda-nvcc jaxlib==0.4.4=cuda112* cudatoolkit -c conda-forge -c nvidia
-pip install -r requirements.txt
-python main.py vbg --num_iterations 10 
+conda activate vbg
+python main.py --seed 3 --model_obs_noise 0.1 --data_obs_noise 0.1 --name sachs_20 --graph sachs vbg --weight 0.5
