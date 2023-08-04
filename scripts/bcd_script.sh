@@ -9,4 +9,4 @@
 module load anaconda/3
 module load cudatoolkit/11.1
 conda activate baseline_bcd_env
-python main.py --graph sachs --seed 0 --name sachs bcd --num_steps 10000
+python main.py --graph sachs --num_edges 11 --seed 0 --name sachs bcd --num_steps 10000

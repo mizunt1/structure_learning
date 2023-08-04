@@ -92,7 +92,6 @@ def main(args):
         annot = False
     else:
         annot = True
-
     if has_edge_weights:
         weighted_adj = get_weighted_adjacency(graph)
     else:
@@ -326,7 +325,7 @@ if __name__ == '__main__':
     bcd_parser.add_argument("--do_ev_noise", action="store_false")
     bcd_parser.add_argument("--num_steps", type=int, default=1000)
     bcd_parser.add_argument("--update_freq", type=int, default=200)
-    bcd_parser.add_argument("--lr", type=float, default=1e-4)
+    bcd_parser.add_argument("--lr", type=float, default=1e-5)
     bcd_parser.add_argument("--batch_size", type=int, default=64)
     bcd_parser.add_argument("--num_flow_layers", type=int, default=2)
     bcd_parser.add_argument("--num_perm_layers", type=int, default=2)

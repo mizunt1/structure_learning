@@ -57,6 +57,7 @@ class BCD:
 
         self.num_variables = args.num_variables
         self.degree = args.num_edges // self.num_variables
+        assert self.degree > 0
         self.l_dim = self.num_variables * (self.num_variables - 1) // 2
         self.num_steps = args.num_steps
         self.update_freq = args.update_freq
@@ -285,6 +286,7 @@ class BCD:
         final_term = likelihoods - KL_term_L - logprob_P + log_P_prior
 
         return jnp.mean(final_term), out_L_states
+
 
     @partial(jit, static_argnums=(0,))
     def gradient_step(self, rng_key, P_params, L_params, L_states, P_opt_state, L_opt_state, data):

@@ -10,4 +10,4 @@ WANDB_ENTITY=$mizunt
 module load anaconda/3
 module load cudatoolkit/11.1
 conda activate vbg
-python main.py --graph sachs --name sachs dibs --prior_str er --steps 3000
+python main.py --graph sachs --name sachs_test dibs --prior_str er --steps 3000 --marginal
