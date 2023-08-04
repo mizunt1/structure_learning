@@ -1,6 +1,7 @@
 import os
 from time import time
 import seaborn as sns
+import json
 import wandb
 import numpy as np
 import networkx as nx
@@ -41,6 +42,8 @@ def main(args):
         from bcd_nets.model import Model
     elif 'bs' in args.model:
         from bs.model import Model
+    elif 'dag_gflownet' in args.model:
+        from dag_gflownet.model import Model
     else:
         raise Exception("inference method not implemented")
 
@@ -323,7 +326,7 @@ if __name__ == '__main__':
 
     bcd_parser = subparsers.add_parser('bcd')  
     bcd_parser.add_argument("--do_ev_noise", action="store_false")
-    bcd_parser.add_argument("--num_steps", type=int, default=1000)
+    bcd_parser.add_argument("--num_steps", type=int, default=20_000)
     bcd_parser.add_argument("--update_freq", type=int, default=200)
     bcd_parser.add_argument("--lr", type=float, default=1e-5)
     bcd_parser.add_argument("--batch_size", type=int, default=64)
@@ -349,5 +352,50 @@ if __name__ == '__main__':
     mcmc_parser.add_argument('--burnin', type=int, default=10)
     bs_parser = subparsers.add_parser('bs')
     bs_parser.add_argument('--method', choices=['ges', 'pc'])
+
+    dgfn_parser = subparsers.add_parser('dag_gflownet')
+    dgfn_parser.add_argument('--num_envs', type=int, default=8,
+        help='Number of parallel environments (default: %(default)s)')
+    dgfn_parser.add_argument('--scorer_kwargs', type=json.loads, default='{}',
+        help='Arguments of the scorer.')
+    dgfn_parser.add_argument('--prior', type=str, default='uniform',
+        choices=['uniform', 'erdos_renyi', 'edge', 'fair'],
+        help='Prior over graphs (default: %(default)s)')
+    dgfn_parser.add_argument('--prior_kwargs', type=json.loads, default='{}',
+        help='Arguments of the prior over graphs.')
+
+    # Optimization
+    dgfn_parser.add_argument('--lr', type=float, default=1e-5,
+        help='Learning rate (default: %(default)s)')
+    dgfn_parser.add_argument('--delta', type=float, default=1.,
+        help='Value of delta for Huber loss (default: %(default)s)')
+    dgfn_parser.add_argument('--batch_size', type=int, default=32,
+        help='Batch size (default: %(default)s)')
+    dgfn_parser.add_argument('--num_iterations', type=int, default=100_000,
+        help='Number of iterations (default: %(default)s)')
+
+    # Replay buffer
+    dgfn_parser.add_argument('--replay_capacity', type=int, default=100_000,
+        help='Capacity of the replay buffer (default: %(default)s)')
+    dgfn_parser.add_argument('--prefill', type=int, default=1000,
+        help='Number of iterations with a random policy to prefill '
+             'the replay buffer (default: %(default)s)')
+    
+    # Exploration
+    dgfn_parser.add_argument('--min_exploration', type=float, default=0.1,
+        help='Minimum value of epsilon-exploration (default: %(default)s)')
+    dgfn_parser.add_argument('--update_epsilon_every', type=int, default=10,
+        help='Frequency of update for epsilon (default: %(default)s)')
+    
+    # Miscellaneous
+    dgfn_parser.add_argument('--update_target_every', type=int, default=1000,
+        help='Frequency of update for the target network (default: %(default)s)')
+    dgfn_parser.add_argument('--seed', type=int, default=0,
+        help='Random seed (default: %(default)s)')
+    dgfn_parser.add_argument('--num_workers', type=int, default=4,
+        help='Number of workers (default: %(default)s)')
+    dgfn_parser.add_argument('--mp_context', type=str, default='spawn',
+        help='Multiprocessing context (default: %(default)s)')
+
     args = parser.parse_args()
     main(args)
