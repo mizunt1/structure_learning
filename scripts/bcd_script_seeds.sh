@@ -2,9 +2,10 @@
 #SBATCH --job-name=BCD
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
-#SBATCH --time=2:00:00
+#SBATCH --time=3:00:00
+#SBATCH --begin=now+8hours
 #SBATCH --mem=8G
-#SBATCH --array=0-4
+#SBATCH --array=0-20%10
 module load anaconda/3
 module load cudatoolkit/11.1
 conda activate baseline_bcd_env

@@ -110,4 +110,4 @@ class Model:
             desc='Sampling from posterior'
         )
 
-        return posterior, None, None
+        return posterior, posterior, posterior

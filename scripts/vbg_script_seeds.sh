@@ -4,7 +4,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --time=8:10:00
 #SBATCH --mem=10Gb
-#SBATCH --array=0-4
+#SBATCH --array=0-19%10
 
 WANDB_API_KEY=$17a113b4804951bde9c66b2002fe378c0209fb64
 WANDB_ENTITY=$mizunt

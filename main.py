@@ -85,9 +85,10 @@ def main(args):
         # Standardize data
         data = (data - data.mean()) / data.std()
         has_edge_weights = False
-        test_amount = len(data)//3
-        data_test = data[0:test_amount]
-        data = data[test_amount:]
+        #test_amount = len(data)//3
+        #data_test = data[0:test_amount]
+        #data = data[test_amount:]
+        data_test = data
     if args.graph == 'sachs':
         args.num_variables = 11
         args.num_samples_data = len(data)
@@ -111,7 +112,7 @@ def main(args):
     start_time = time()
     model = Model(args.num_samples_posterior, args.model_obs_noise, args)
     model_trained = model.train(data, args.seed)
-    if args.model in ['vbg', 'mcmc', 'bs', 'bcd']:
+    if args.model in ['vbg', 'mcmc', 'bs', 'bcd', 'dag_gflownet']:
         # sampling procedure is stochastic
         posterior_graphs, posterior_edges, sigmas = model.sample(args.seed)
     else:
@@ -328,7 +329,7 @@ if __name__ == '__main__':
     bcd_parser.add_argument("--do_ev_noise", action="store_false")
     bcd_parser.add_argument("--num_steps", type=int, default=20_000)
     bcd_parser.add_argument("--update_freq", type=int, default=200)
-    bcd_parser.add_argument("--lr", type=float, default=1e-5)
+    bcd_parser.add_argument("--lr", type=float, default=1e-3)
     bcd_parser.add_argument("--batch_size", type=int, default=64)
     bcd_parser.add_argument("--num_flow_layers", type=int, default=2)
     bcd_parser.add_argument("--num_perm_layers", type=int, default=2)

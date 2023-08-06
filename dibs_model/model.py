@@ -64,5 +64,8 @@ class Model:
             self.theta = dist.theta
         is_dag = elwise_acyclic_constr_nograd(self.gs, self.num_variables) == 0
         posterior_graphs = self.gs[is_dag, :, :]
-        posterior_thetas = self.thetas[is_dag, :, :]
-        return posterior_graphs, posterior_thetas, None
+        if self.marginal:
+            return posterior_graphs, posterior_graphs, None
+        else:
+            posterior_thetas = self.thetas[is_dag, :, :]
+            return posterior_graphs, posterior_thetas, None
