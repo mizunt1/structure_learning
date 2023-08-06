@@ -321,6 +321,9 @@ if __name__ == '__main__':
                              help='dibs prior, uni for uniform, er for erdos renri, sf for scale free')
     dibs_parser.add_argument('--marginal', action='store_true',
                             help='using dibs marginal')
+    dibs_parser.add_argument('--non_lin', action='store_true',
+                            help='using dibs marginal')
+
 
     bcd_parser = subparsers.add_parser('bcd')  
     bcd_parser.add_argument("--do_ev_noise", action="store_false")

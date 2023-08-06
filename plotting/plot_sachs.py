@@ -17,8 +17,8 @@ def get_runs():
         }]}
     )
 
-methods = ['vbg', 'dag_gflownet', 'dibs', 'dibs +', 'bcd', 'ges', 'pc', 'gibbs', 'mh']
-method_str = ['VBG', 'DAG_GFlowNet', 'DiBS', 'DiBS +', 'bcd nets',
+methods = ['vbg', 'dag_gflownet', 'dibs', 'dibs +', 'dibs marg', 'bcd', 'ges', 'pc', 'gibbs', 'mh']
+method_str = ['VBG', 'DGFN', 'DiBS', 'DiBS+', 'DiBS M', 'BCD Nets',
                    'BS GES',  'BS PC',  'Gibbs', 'MH']
 
 method_zip = dict((zip(methods, method_str)))
@@ -40,6 +40,9 @@ for run_ in runs:
             method = 'dibs +'
         else:
             method = 'dibs'
+            if 'marginal' in inf.keys():
+                if inf['marginal']['value']:
+                    method = 'dibs marg'
         inf['model']
     if method == 'mcmc':
         if inf['method']['value'] == 'mh':
