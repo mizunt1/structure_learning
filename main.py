@@ -47,14 +47,10 @@ def main(args):
     else:
         raise Exception("inference method not implemented")
 
+    
     rng = default_rng(args.seed)
     rng_2 = default_rng(args.seed + 1000)
     key = random.PRNGKey(args.seed)
-    if args.num_variables > 5:
-        annot = False
-    else:
-        annot = True
-
     if args.graph == 'erdos_renyi_lingauss':
         graph = sample_erdos_renyi_linear_gaussian(
             num_variables=args.num_variables,
@@ -89,10 +85,17 @@ def main(args):
         # Standardize data
         data = (data - data.mean()) / data.std()
         has_edge_weights = False
-        test_amount = len(data)//3
-        data_test = data[0:test_amount]
-        data = data[test_amount:]
-        
+        #test_amount = len(data)//3
+        #data_test = data[0:test_amount]
+        #data = data[test_amount:]
+        data_test = data
+    if args.graph == 'sachs':
+        args.num_variables = 11
+        args.num_samples_data = len(data)
+    if args.num_variables > 5:
+        annot = False
+    else:
+        annot = True
     if has_edge_weights:
         weighted_adj = get_weighted_adjacency(graph)
     else:
@@ -109,7 +112,7 @@ def main(args):
     start_time = time()
     model = Model(args.num_samples_posterior, args.model_obs_noise, args)
     model_trained = model.train(data, args.seed)
-    if args.model in ['vbg', 'mcmc', 'bs', 'bcd']:
+    if args.model in ['vbg', 'mcmc', 'bs', 'bcd', 'dag_gflownet']:
         # sampling procedure is stochastic
         posterior_graphs, posterior_edges, sigmas = model.sample(args.seed)
     else:

@@ -8,9 +8,6 @@
 WANDB_API_KEY=$17a113b4804951bde9c66b2002fe378c0209fb64
 WANDB_ENTITY=$mizunt
 module load anaconda/3
-conda create -n dibs_env python=3.10
-conda activate dibs_env
-conda install jax cuda-nvcc jaxlib==0.4.4=cuda112* cudatoolkit -c conda-forge -c nvidia
-pip install -r requirements.txt
-pip uninstall -y torch
-python main.py dibs
+module load cudatoolkit/11.1
+conda activate vbg
+python main.py --graph sachs --name sachs_test dibs --prior_str er --steps 3000 --marginal
