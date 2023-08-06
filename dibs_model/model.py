@@ -30,7 +30,7 @@ class Model:
             _, model = make_linear_gaussian_equivalent_model(key=subk, n_vars=self.num_variables,
                                                              obs_noise=self.model_obs_noise,
                                                              graph_prior_str=self.prior_str)
-        if self.non_lin:
+        elif self.non_lin:
             _, model = make_nonlinear_gaussian_model(key=subk, n_vars=self.num_variables,
                                                      obs_noise=self.model_obs_noise,
                                                      graph_prior_str=self.prior_str)
