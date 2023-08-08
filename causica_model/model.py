@@ -30,13 +30,15 @@ from causica.training.auglag import AugLagLRConfig
 class Model:
     def __init__(self, num_samples_posterior, model_obs_noise, args):
         self.num_samples_posterior = num_samples_posterior
-        self.max_epoch = args['num_steps']
+        self.max_epoch = args.num_steps
         self.vardist = None
 
     def train(self, data, seed):
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
         rng = default_rng(seed)
         rng_2 = default_rng(seed + 1000)
         node_name_to_idx = {key: i for i, key in enumerate(data.keys())}
+        num_nodes = data.shape[1]
         constraint_matrix = np.full((num_nodes, num_nodes), np.nan, dtype=np.float32)
         # Training config
 
@@ -178,8 +180,10 @@ class Model:
 
 
     def sample(self):
-            samples = self.vardist.sample_n(self.num_samples_posterior).cpu().numpy()
-            return samples, samples
+            samples = self.vardist.sample((self.num_samples_posterior,)).cpu().numpy()
+            print("NB!! Causica only written to return Graphs not parameters at this moment!")
+            return samples, samples, samples
+        
 
 
 if __name__ == "__main__":
@@ -188,7 +192,7 @@ if __name__ == "__main__":
         delimiter='\t',
         dtype=np.float_
     )
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 
     graph = get_example_model('sachs')
 
