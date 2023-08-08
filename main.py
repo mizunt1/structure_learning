@@ -44,6 +44,8 @@ def main(args):
         from bs.model import Model
     elif 'dag_gflownet' in args.model:
         from dag_gflownet.model import Model
+    elif causica in args.model:
+        from causica_model import Model
     else:
         raise Exception("inference method not implemented")
 
@@ -400,6 +402,10 @@ if __name__ == '__main__':
         help='Number of workers (default: %(default)s)')
     dgfn_parser.add_argument('--mp_context', type=str, default='spawn',
         help='Multiprocessing context (default: %(default)s)')
+
+    causica_parser = subparsers.add_parser('causica')
+    dgfn_parser.add_argument('--num_steps', type=int, default=50,
+
 
     args = parser.parse_args()
     main(args)
