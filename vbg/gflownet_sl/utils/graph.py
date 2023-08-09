@@ -96,6 +96,8 @@ def sample_erdos_renyi_linear_gaussian(
         rng=default_rng(),
         block_small_theta=False
     ):
+    if isinstance(obs_noise, float):
+        obs_noise = np.tile(obs_noise, num_variables)
     # Create graph structure
     graph = sample_erdos_renyi_graph(
         num_variables,
@@ -107,7 +109,7 @@ def sample_erdos_renyi_linear_gaussian(
     )
     # Create the model parameters
     factors = []
-    for node in graph.nodes:
+    for node, noise in zip(graph.nodes, obs_noise):
         parents = list(graph.predecessors(node))
 
         # Sample random parameters (from Normal distribution)
@@ -121,7 +123,7 @@ def sample_erdos_renyi_linear_gaussian(
         theta[0] = 0.  # There is no bias term
 
         # Create factor
-        factor = LinearGaussianCPD(node, theta, obs_noise, parents)
+        factor = LinearGaussianCPD(node, theta, noise, parents)
         factors.append(factor)
 
     graph.add_cpds(*factors)

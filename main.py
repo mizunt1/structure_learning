@@ -51,6 +51,8 @@ def main(args):
     rng = default_rng(args.seed)
     rng_2 = default_rng(args.seed + 1000)
     key = random.PRNGKey(args.seed)
+    if args.hetero_noise:
+        obs_noise = random.uniform(key, minval=0.05, maxval=0.5, shape=(args.num_variables,))
     if args.graph == 'erdos_renyi_lingauss':
         graph = sample_erdos_renyi_linear_gaussian(
             num_variables=args.num_variables,
@@ -181,7 +183,7 @@ def main(args):
         'metrics/thresholds': thresholds
     })
 
-    if (args.graph in ['erdos_renyi_lingauss']) and (args.num_variables < 6):
+    if (args.graph in ['erdos_renyi_lingauss']) and (args.num_variables < 6) and (args.hetero_noise == False):
         # Default values set by data generation
         # See `sample_erdos_renyi_linear_gaussian` above
         if args.model == 'bcd':
@@ -274,6 +276,8 @@ if __name__ == '__main__':
                         help='likelihood variance in approximate posterior')
     parser.add_argument('--name', type=str, default='test',
                         help='project name for wandb')
+    parser.add_argument('--hetero_noise', default=False,
+                            action='store_true')
 
     # VBG args
     vbg_parser.add_argument('--batch_size', type=int, default=32,
@@ -326,6 +330,10 @@ if __name__ == '__main__':
                             help='using dibs marginal')
     dibs_parser.add_argument('--non_lin', action='store_true',
                             help='using dibs marginal')
+    dibs_parser.add_argument('--joint_batch', action='store_true',
+                            help='using dibs joint with batching')
+    dibs_parser.add_argument('--batch_size', default=124, type=int,
+                            help='batch size for when using joint batch')
 
 
     bcd_parser = subparsers.add_parser('bcd')  

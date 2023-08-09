@@ -116,6 +116,8 @@ def compute_delta_score_lingauss_full(adjacency, action, params,
                                       weight, use_erdos_prior):
     num_variables = params.mean.shape[0]
     source, target = divmod(action, num_variables)
+    if isinstance(obs_noise, jax.numpy.ndarray):
+        obs_noise = obs_noise[target]
     adjacency = adjacency.at[source, target].set(1)
     precision = params.precision[:,:,target][:,:,0]
     # masking covariance terms for R(G)
@@ -219,4 +221,7 @@ def update_parameters_full(prior, graphs, X, obs_noise):
         b = jnp.dot(prior.precision, prior.mean) + XTy_w / (obs_noise)
         mean = jnp.linalg.solve(precision, b)
         return NormalParameters(mean=mean, precision=precision)
-    return jax.vmap(_update, in_axes=-1, out_axes=-1)(graphs, X)
+    if isinstance(obs_noise, list):
+        return jax.vmap(_update, in_axes=(-1, -1, 0), out_axes=-1)(graphs, X, obs_noise)  
+    else:
+        return jax.vmap(_update, in_axes=-1, out_axes=-1)(graphs, X)
