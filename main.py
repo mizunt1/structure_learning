@@ -44,6 +44,8 @@ def main(args):
         from bs.model import Model
     elif 'dag_gflownet' in args.model:
         from dag_gflownet.model import Model
+    elif 'causica' in args.model:
+        from causica_model.model import Model
     else:
         raise Exception("inference method not implemented")
 
@@ -176,7 +178,6 @@ def main(args):
 
     # Threshold metrics
     thresholds = threshold_metrics(posterior_graphs, gt_adjacency)
-
     wandb.run.summary.update({
         'metrics/shd/mean': mean_shd,
         'metrics/edges/mean': mean_edges,
@@ -243,7 +244,6 @@ def main(args):
             'posterior/estimate/path': table_from_dict(log_features.path),
             'posterior/estimate/markov_blanket': table_from_dict(log_features.markov_blanket)
         })
-
 if __name__ == '__main__':
     parser = ArgumentParser()
     subparsers = parser.add_subparsers(dest='model')
@@ -408,6 +408,10 @@ if __name__ == '__main__':
         help='Number of workers (default: %(default)s)')
     dgfn_parser.add_argument('--mp_context', type=str, default='spawn',
         help='Multiprocessing context (default: %(default)s)')
+
+    causica_parser = subparsers.add_parser('causica')
+    causica_parser.add_argument('--num_steps', type=int, default=100)
+
 
     args = parser.parse_args()
     main(args)
