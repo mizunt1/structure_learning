@@ -1,9 +1,9 @@
-from dibs.inference import JointDiBS, MarginalDiBS
-from dibs.target import make_linear_gaussian_model, make_nonlinear_gaussian_model, make_linear_gaussian_equivalent_model
+from dibs_clone.dibs.inference import JointDiBS, MarginalDiBS, JointDiBSBatch
+from dibs_clone.dibs.target import make_linear_gaussian_model, make_nonlinear_gaussian_model, make_linear_gaussian_equivalent_model
 import jax.random as random
 
 import jax.numpy as jnp
-from dibs.graph_utils import elwise_acyclic_constr_nograd
+from dibs_clone.dibs.graph_utils import elwise_acyclic_constr_nograd
 
 def uniform_prior():
     return jnp.array(0.0)
@@ -21,6 +21,8 @@ class Model:
         self.prior_str = args.prior_str
         self.marginal = args.marginal
         self.non_lin = args.non_lin
+        self.joint_batch = args.joint_batch
+        self.batch_size = args.batch_size
 
     def train(self, data, seed):
         key = random.PRNGKey(seed)
@@ -42,6 +44,10 @@ class Model:
         # sample 10 DAG and parameter particles from the joint posterior
         if self.marginal:
             self.dibs = MarginalDiBS(x=data.to_numpy(), interv_mask=None, inference_model=model)
+        elif self.joint_batch:
+            data_b1 = data.to_numpy()[0: self.batch_size]
+            self.dibs = JointDiBSBatch(x_real=None, x=data_b1, 
+                                       interv_mask=None, inference_model=model)
         else:
             self.dibs = JointDiBS(x=data.to_numpy(), interv_mask=None,
                               inference_model=model)
@@ -49,6 +55,7 @@ class Model:
             self.gs = self.dibs.sample(key=subk, n_particles=self.num_samples_posterior,
                                   steps=self.steps)
             self.thetas = self.gs
+            
         else:
             self.gs, self.thetas = self.dibs.sample(key=subk,
                                                     n_particles=self.num_samples_posterior,
