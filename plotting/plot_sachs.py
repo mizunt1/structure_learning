@@ -9,7 +9,7 @@ import pandas as pd
 
 
 api = wandb.Api(timeout=19)
-entity, project = 'mizunt', 'sachs_20'
+entity, project = 'mizunt', 'sachs_5'
 def get_runs():
     return api.runs(entity + '/' + project,
         filters={'$and': [{
@@ -17,8 +17,8 @@ def get_runs():
         }]}
     )
 
-methods = ['vbg', 'dag_gflownet', 'dibs', 'dibs +', 'dibs marg', 'bcd', 'ges', 'pc', 'gibbs', 'mh']
-method_str = ['VBG', 'DGFN', 'DiBS', 'DiBS+', 'DiBS M', 'BCD Nets',
+methods = ['vbg', 'dag_gflownet', 'dibs', 'dibs +', 'dibs marg', 'bcd', 'causica','ges', 'pc', 'gibbs', 'mh']
+method_str = ['VBG', 'DGFN', 'DiBS', 'DiBS+', 'DiBS M', 'BCD Nets', 'causica',
                    'BS GES',  'BS PC',  'Gibbs', 'MH']
 
 method_zip = dict((zip(methods, method_str)))
