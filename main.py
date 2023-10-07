@@ -46,6 +46,8 @@ def main(args):
         from dag_gflownet.model import Model
     elif 'causica' in args.model:
         from causica_model.model import Model
+    elif 'jsp' in args.model:
+        from jax_jsp_gfn.model import Model
     else:
         raise Exception("inference method not implemented")
 
@@ -411,6 +413,50 @@ if __name__ == '__main__':
 
     causica_parser = subparsers.add_parser('causica')
     causica_parser.add_argument('--num_steps', type=int, default=100)
+    
+    jsp_parser = subparsers.add_parser('jsp')
+    jsp_parser.add_argument('--num_steps', type=int, default=100)
+    jsp_parser.add_argument('--num_envs', type=int, default=8,
+        help='Number of parallel environments (default: %(default)s)')
+
+    jsp_parser.add_argument('--prior', type=str, default='uniform',
+        choices=['uniform', 'erdos_renyi', 'edge', 'fair'],
+        help='Prior over graphs (default: %(default)s)')
+    jsp_parser.add_argument('--max_parents', type=int, default=None,
+        help='Maximum number of parents')
+    # Data
+    # Optimization
+    optimization = parser.add_argument_group('Optimization')
+    jsp_parser.add_argument('--lr', type=float, default=1e-5,
+        help='Learning rate (default: %(default)s)')
+    jsp_parser.add_argument('--delta', type=float, default=1.,
+        help='Value of delta for Huber loss (default: %(default)s)')
+    jsp_parser.add_argument('--batch_size', type=int, default=32,
+        help='Batch size (default: %(default)s)')
+    jsp_parser.add_argument('--num_iterations', type=int, default=100_000,
+        help='Number of iterations (default: %(default)s)')
+    jsp_parser.add_argument('--params_num_samples', type=int, default=1,
+        help='Number of samples of model parameters to compute the loss (default: %(default)s)')
+    jsp_parser.add_argument('--update_target_every', type=int, default=0,
+        help='Frequency of update for the target network (0 = no target network)')
+    jsp_parser.add_argument('--batch_size_data', type=int, default=None,
+        help='Batch size for the data (default: %(default)s)')
+
+    # Replay buffer
+
+    jsp_parser.add_argument('--replay_capacity', type=int, default=100_000,
+        help='Capacity of the replay buffer (default: %(default)s)')
+    jsp_parser.add_argument('--prefill', type=int, default=1000,
+        help='Number of iterations with a random policy to prefill '
+             'the replay buffer (default: %(default)s)')
+    
+    # Exploration
+    jsp_parser.add_argument('--min_exploration', type=float, default=0.1,
+        help='Minimum value of epsilon-exploration (default: %(default)s)')
+    
+    # Miscellaneous
+    jsp_parser.add_argument('--num_samples_posterior', type=int, default=1000,
+        help='Number of samples for the posterior estimate (default: %(default)s)')
 
 
     args = parser.parse_args()
