@@ -122,7 +122,7 @@ def main(args):
     end_time = time()
     print("time taken to train")
     print(start_time - end_time)
-    if args.model in ['vbg', 'mcmc', 'bs', 'bcd', 'dag_gflownet']:
+    if args.model in ['vbg', 'mcmc', 'bs', 'bcd', 'dag_gflownet', 'jsp']:
         # sampling procedure is stochastic
         posterior_graphs, posterior_edges, sigmas = model.sample(args.seed)
     else:

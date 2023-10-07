@@ -19,9 +19,12 @@ class Model:
     def __init__(self, num_samples_posterior, model_obs_noise, args):
         self.num_samples_posterior = num_samples_posterior
         self.max_epoch = args.num_steps
-        self.vardist = None
         self.model_obs_noise = model_obs_noise
         self.args = args
+        self.posterior= None
+        self.params = None
+        self.vardist = None
+        self.train_jnp = None
 
     def train(self, data, seed):
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -31,10 +34,10 @@ class Model:
         key = jax.random.PRNGKey(seed)
         key, subkey = jax.random.split(key)
         
-        train_jnp = jax.tree_util.tree_map(jnp.asarray, data)
+        self.train_jnp = jax.tree_util.tree_map(jnp.asarray, data)
 
         # Create the environment
-        env = GFlowNetDAGEnv(
+        self.env = GFlowNetDAGEnv(
             num_envs=self.args.num_envs,
             num_variables=data.shape[1],
             max_parents=self.args.max_parents
@@ -43,17 +46,17 @@ class Model:
         # Create the replay buffer
         replay = ReplayBuffer(
             self.args.replay_capacity,
-            num_variables=env.num_variables,
+            num_variables=self.env.num_variables,
         )
 
         # Create the model
         obs_scale = self.model_obs_noise
         prior_graph = get_model_prior(self.args.prior, 'uniform', self.args)
         print('prior for jsp is uniform only!')
-        model = get_model('lingauss_full', prior_graph, train_jnp, obs_scale)
+        model = get_model('lingauss_full', prior_graph, self.train_jnp, obs_scale)
 
         # Create the GFlowNet & initialize parameters
-        gflownet = DAGGFlowNet(
+        self.gflownet = DAGGFlowNet(
             model=model,
             delta=self.args.delta,
             num_samples=self.args.params_num_samples,
@@ -63,7 +66,7 @@ class Model:
         )
 
         optimizer = optax.adam(self.args.lr)
-        params, state = gflownet.init(
+        self.params, state = self.gflownet.init(
             subkey,
             optimizer,
             replay.dummy['graph'],
@@ -79,7 +82,7 @@ class Model:
 
         # Training loop
         indices = None
-        observations = env.reset()
+        observations = self.env.reset()
         normalization = jnp.array(data.shape[0])
 
         with trange(self.args.prefill + self.args.num_iterations, desc='Training') as pbar:
@@ -87,8 +90,8 @@ class Model:
                 # Sample actions, execute them, and save transitions in the replay buffer
                 epsilon = exploration_schedule(iteration)
                 observations['graph'] = to_graphs_tuple(observations['adjacency'])
-                actions, key, logs = gflownet.act(params.online, key, observations, epsilon, normalization)
-                next_observations, delta_scores, dones, _ = env.step(np.asarray(actions))
+                actions, key, logs = self.gflownet.act(self.params.online, key, observations, epsilon, normalization)
+                next_observations, delta_scores, dones, _ = self.env.step(np.asarray(actions))
                 indices = replay.add(
                     observations,
                     actions,
@@ -103,21 +106,31 @@ class Model:
                 if iteration >= self.args.prefill:
                     # Update the parameters of the GFlowNet
                     samples = replay.sample(batch_size=self.args.batch_size, rng=rng)
-                    params, state, logs = gflownet.step(params, state, samples, train_jnp, normalization)
+                    self.params, state, logs = self.gflownet.step(self.params, state, samples, self.train_jnp, normalization)
 
                     pbar.set_postfix(loss=f"{logs['loss']:.2f}")
 
         # Evaluate the posterior estimate
         posterior, logs = posterior_estimate(
-            gflownet,
-            params.online,
-            env,
+            self.gflownet,
+            self.params.online,
+            self.env,
             key,
-            train_jnp,
+            self.train_jnp,
             num_samples=self.num_samples_posterior,
             desc='Sampling from posterior'
         )
 
-    def sample(self):
-        return None
+    def sample(self, seed):
+        key = jax.random.PRNGKey(seed)
+        posterior, logs = posterior_estimate(
+            self.gflownet,
+            self.params.online,
+            self.env,
+            key,
+            self.train_jnp,
+            num_samples=self.num_samples_posterior,
+            desc='Sampling from posterior'
+        )
+        return posterior, logs['thetas'].squeeze(1), None
 
