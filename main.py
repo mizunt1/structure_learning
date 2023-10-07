@@ -115,7 +115,11 @@ def main(args):
     wandb.save('data_train.csv', policy='now')
     start_time = time()
     model = Model(args.num_samples_posterior, args.model_obs_noise, args)
+    
     model_trained = model.train(data, args.seed)
+    end_time = time()
+    print("time taken to train")
+    print(start_time - end_time)
     if args.model in ['vbg', 'mcmc', 'bs', 'bcd', 'dag_gflownet']:
         # sampling procedure is stochastic
         posterior_graphs, posterior_edges, sigmas = model.sample(args.seed)

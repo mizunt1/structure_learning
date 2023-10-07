@@ -3,10 +3,9 @@
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --time=3:00:00
-#SBATCH --begin=now+8hours
 #SBATCH --mem=8G
-#SBATCH --array=0-20%10
+#SBATCH --array=0-4
 module load anaconda/3
 module load cudatoolkit/11.1
 conda activate baseline_bcd_env
-python main.py --graph sachs --num_edges 11 --seed ${SLURM_ARRAY_TASK_ID} --name sachs_20 bcd --num_steps 10000
+python main.py  --seed ${SLURM_ARRAY_TASK_ID} --num_variables 50 --num_edges 50 --name 50_nodes_longer --graph erdos_renyi_lingauss bcd --num_steps 10000
