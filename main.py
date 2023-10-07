@@ -118,7 +118,7 @@ def main(args):
     start_time = time()
     model = Model(args.num_samples_posterior, args.model_obs_noise, args)
     model_trained = model.train(data, args.seed)
-    if args.model in ['vbg', 'mcmc', 'bs', 'bcd', 'dag_gflownet']:
+    if args.model in ['vbg', 'mcmc', 'bs', 'bcd', 'dag_gflownet', 'jsp']:
         # sampling procedure is stochastic
         posterior_graphs, posterior_edges, sigmas = model.sample(args.seed)
     else:

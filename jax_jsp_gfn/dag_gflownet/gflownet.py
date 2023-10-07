@@ -154,7 +154,7 @@ class DAGGFlowNet:
         graphs = observations['graph']
         key, subkey1, subkey2 = random.split(key, 3)
 
-        normalization = jnp.array(dataset.data.shape[0])
+        normalization = jnp.array(dataset.shape[0])
         norm = jnp.array(1.)
         state = self.get_state(params, subkey1, graphs, masks, dataset, num_samples, normalization, norm)
 
