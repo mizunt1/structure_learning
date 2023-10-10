@@ -50,7 +50,9 @@ class Model:
         )
 
         # Create the model
-        obs_scale = self.model_obs_noise
+        # structure learning codebase takes in variance but jsp takes in
+        # standard deviation for the model
+        obs_scale = np.sqrt(self.model_obs_noise)
         prior_graph = get_model_prior(self.args.prior, 'uniform', self.args)
         print('prior for jsp is uniform only!')
         model = get_model('lingauss_full', prior_graph, self.train_jnp, obs_scale)
