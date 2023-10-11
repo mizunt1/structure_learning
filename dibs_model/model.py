@@ -1,9 +1,9 @@
-from dibs_clone.dibs.inference import JointDiBS, MarginalDiBS, JointDiBSBatch
-from dibs_clone.dibs.target import make_linear_gaussian_model, make_nonlinear_gaussian_model, make_linear_gaussian_equivalent_model
+from dibs.inference import JointDiBS, MarginalDiBS
+from dibs.target import make_linear_gaussian_model, make_nonlinear_gaussian_model, make_linear_gaussian_equivalent_model
 import jax.random as random
 
 import jax.numpy as jnp
-from dibs_clone.dibs.graph_utils import elwise_acyclic_constr_nograd
+from dibs.graph_utils import elwise_acyclic_constr_nograd
 
 def uniform_prior():
     return jnp.array(0.0)

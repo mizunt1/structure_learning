@@ -113,6 +113,8 @@ class Model:
 
         with trange(self.args.num_iterations, desc='Training') as pbar:
             for iteration in pbar:
+                print("iteration")
+                print(iteration)
                 losses = np.zeros(self.args.num_vb_updates)           
                 if (iteration + 1) % self.args.update_target_every == 0:
                     # Update the parameters of the target network
