@@ -56,10 +56,12 @@ def combine_runs(methods, base_dir, nodes_5):
 if __name__ == '__main__':
     nodes_5 = False
     if nodes_5:
-        base_dir = '/network/scratch/m/mizu.nishikawa-toomey/sl/n20'
-        methods = ['ges_arxiv2_n20', 'bcd_arxiv_n20', 'vbg_arxiv2_w_0.5_n20', 'dibs_plus_arxiv2_n20', 'pc_arxiv2_n20', 'dibs_arxiv2_n20', 'gibbs_arxiv2_n20', 'mh_arxiv2_n20']
+        base_dir = 'aistats_5'
+        methods = ['ges_arxiv2_n5', 'bcd_arxiv2', 'vbg_arxiv3_n5', 'dibs_plus_arxiv2_n5', 'pc_arxiv2_n5', 'dibs_arxiv2_n5', 'gibs_arxiv2_n5',  'mh_arxiv2_n5', 'vbg_arxiv2_w_0.5', 'jsp_5_correct2']
+
     else:
-        methods = ['ges_arxiv2_n5', 'bcd_arxiv2', 'vbg_arxiv3_n5', 'dibs_plus_arxiv2_n5', 'pc_arxiv2_n5', 'dibs_arxiv2_n5', 'gibs_arxiv2_n5',  'mh_arxiv2_n5', 'vbg_arxiv2_w_0.5']
-        methods = ['mh_arxiv2_n5_burn', 'mh_arxiv2_n20_theta']
+        base_dir = 'aistats_20'
+        methods = ['ges_arxiv2_n20', 'bcd_arxiv_n20', 'vbg_arxiv2_w_0.5_n20', 'dibs_plus_arxiv2_n20', 'pc_arxiv2_n20', 'dibs_arxiv2_n20', 'gibbs_arxiv2_n20', 'mh_arxiv2_n20', 'jsp_20', 'jsp_20_correct2_long']
+
 
     combine_runs(methods, base_dir, nodes_5)
