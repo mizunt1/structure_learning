@@ -55,7 +55,7 @@ class Model:
         obs_scale = np.sqrt(self.model_obs_noise)
         prior_graph = get_model_prior(self.args.prior, 'uniform', self.args)
         print('prior for jsp is uniform only!')
-        model = get_model('lingauss_full', prior_graph, self.train_jnp, obs_scale)
+        model = get_model(self.args.model_type, prior_graph, self.train_jnp, obs_scale)
 
         # Create the GFlowNet & initialize parameters
         self.gflownet = DAGGFlowNet(
