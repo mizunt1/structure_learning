@@ -13,7 +13,7 @@ from jax_jsp_gfn.dag_gflownet.utils.jnp_utils import batch_random_choice
 
 DAGGFlowNetParameters = namedtuple('DAGGFlowNetParameters', ['online', 'target'])
 DAGGFlowNetState = namedtuple('DAGGFlowNetState', ['optimizer', 'key', 'steps'])
-GFNState = namedtuple('GFNState', ['thetas', 'log_pi', 'log_p_theta', 'scores', 'diffs'])
+GFNState = namedtuple('GFNState', ['thetas', 'log_pi', 'log_p_theta', 'scores'])
 
 
 class DAGGFlowNet:
@@ -38,18 +38,9 @@ class DAGGFlowNet:
         # Sample the parameters of the model
         thetas = self.model.sample(key, dist, num_samples)
 
-        def diff_grads(theta, dist, dataset):
-            score = self.model.log_joint(dist.mask, theta, dataset, norm2)
-
-            log_p_theta = self.model.log_prob(theta, dist)
-            log_p_theta = jnp.sum(log_p_theta)  # Sum over variables
-
-            return (score - log_p_theta, score)
-
-        v_diff_grads = jax.grad(diff_grads, has_aux=True)        
-        v_diff_grads = jax.vmap(v_diff_grads, in_axes=(0, None, None))  # vmapping over thetas
-        v_diff_grads = jax.vmap(v_diff_grads, in_axes=(0, 0, None))  # vmapping over batch
-        diffs, scores = v_diff_grads(thetas, dist, dataset)
+        v_score = jax.vmap(self.model.log_joint, in_axes=(None, 0, None, None))  # vmapping over thetas
+        v_score = jax.vmap(v_score, in_axes=(0, 0, None, None))  # vmapping over batch
+        scores = v_score(dist.mask, thetas, dataset, norm2)
 
         # Compute the log-probabilities of the parameters. Use stop-gradient
         # to incorporate information about sub-trajectories of length 2.
@@ -62,8 +53,6 @@ class DAGGFlowNet:
             log_pi=log_pi,
             log_p_theta=jnp.sum(log_p_theta, axis=2),  # Sum the log-probabilities over the variables
             scores=scores,
-            diffs=jnp.sum(diffs ** 2, axis=(1, 2, 3)) / (
-                self.num_samples * jnp.sum(dist.mask, axis=(1, 2))),
         )
 
     def loss(self, params, target_params, key, samples, dataset, normalization):
@@ -77,7 +66,7 @@ class DAGGFlowNet:
             delta_scores = lax.stop_gradient(delta_scores)
 
             # Compute the sub-trajectory balance loss
-            loss, logs = sub_trajectory_balance_loss(
+            return sub_trajectory_balance_loss(
                 state_t.log_pi, state_tp1.log_pi,
                 state_t.log_p_theta, state_tp1.log_p_theta,
                 actions,
@@ -86,11 +75,6 @@ class DAGGFlowNet:
                 normalization=self.dataset_size,
                 delta=self.delta
             )
-
-            # Add penalty for sub-trajectories of length 2 (in differential form)
-            loss = loss + 0.5 * (state_t.diffs + state_tp1.diffs)
-
-            return (loss, logs)
 
         subkey1, subkey2, subkey3 = random.split(key, 3)
 

@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 import numpy as np
 import optax
-import torch
+# import torch
 import jax
 import wandb
 from pathlib import Path
@@ -27,7 +27,10 @@ class Model:
         self.train_jnp = None
 
     def train(self, data, seed):
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        # Normalize the data
+        data = (data - data.mean()) / data.std()
+
+        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
         rng = default_rng(seed)
         rng_2 = default_rng(seed + 1000)
 
@@ -78,7 +81,7 @@ class Model:
         exploration_schedule = jax.jit(optax.linear_schedule(
             init_value=jnp.array(0.),
             end_value=jnp.array(1. - self.args.min_exploration),
-            transition_steps=self.args.num_iterations // 2,
+            transition_steps=self.args.num_iterations // self.args.exploration_warmup_prop,
             transition_begin=self.args.prefill,
         ))
 

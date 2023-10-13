@@ -165,6 +165,10 @@ def main(args):
         edge_marginals, cmap="Blues", annot=annot, annot_kws={"size": 16})
     wandb.log({'edge marginals': wandb.Image(edge_m_plot)})
 
+    # Normalize test data with statistics from train data for JSP-GFN
+    if args.model == 'jsp':
+        data_test = (data_test - data.mean()) / data.std()
+
         # log likelihood of unseen data given model of graph
     if args.model == 'bcd':
         mean_sigma_pred = sigmas[:,0,0].mean()
@@ -459,6 +463,8 @@ if __name__ == '__main__':
     # Exploration
     jsp_parser.add_argument('--min_exploration', type=float, default=0.1,
         help='Minimum value of epsilon-exploration (default: %(default)s)')
+    jsp_parser.add_argument('--exploration_warmup_prop', type=int, default=2,
+        help='Proportion of training steps for warming up exploration (default: %(default)s)')
     
     # Miscellaneous
     jsp_parser.add_argument('--num_samples_posterior', type=int, default=1000,
