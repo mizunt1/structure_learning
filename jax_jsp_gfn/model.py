@@ -134,5 +134,5 @@ class Model:
             num_samples=self.num_samples_posterior,
             desc='Sampling from posterior'
         )
-        return posterior, logs['thetas'].squeeze(1), None
+        return posterior, logs['thetas'].squeeze(1).transpose(0, 2, 1), None
 

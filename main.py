@@ -135,8 +135,6 @@ def main(args):
     else:
         # for dibs sampling procedure is not stochastic
         posterior_graphs, posterior_edges, sigmas = model.sample()
-    import pdb
-    pdb.set_trace()
     # save posterior samples
     with open(os.path.join(wandb.run.dir, 'posterior_graphs.npy'), 'wb') as f:
         np.save(f, posterior_graphs)
@@ -311,7 +309,7 @@ if __name__ == '__main__':
                             help='Number of iterations with a random policy to prefill ')
     vbg_parser.add_argument('--num_envs', type=int, default=8,
                             help='Number of parallel environments (default: %(default)s)')
-    vbg_parser.add_argument('--update_target_every', type=int, default=1000,
+    vbg_parser.add_argument('--update_target_every', type=int, default=100,
                             help='Frequency of update for the target network (default: %(default)s)')
     vbg_parser.add_argument('--n_step', type=int, default=1,
                             help='Maximum number of subsequences for multistep loss (default: %(default)s)')
@@ -448,9 +446,9 @@ if __name__ == '__main__':
         help='Batch size (default: %(default)s)')
     jsp_parser.add_argument('--num_iterations', type=int, default=100_000,
         help='Number of iterations (default: %(default)s)')
-    jsp_parser.add_argument('--params_num_samples', type=int, default=1,
+    jsp_parser.add_argument('--params_num_samples', type=int, default=64,
         help='Number of samples of model parameters to compute the loss (default: %(default)s)')
-    jsp_parser.add_argument('--update_target_every', type=int, default=0,
+    jsp_parser.add_argument('--update_target_every', type=int, default=100,
         help='Frequency of update for the target network (0 = no target network)')
     jsp_parser.add_argument('--batch_size_data', type=int, default=None,
         help='Batch size for the data (default: %(default)s)')
