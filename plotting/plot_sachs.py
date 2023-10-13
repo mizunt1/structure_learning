@@ -9,7 +9,7 @@ import pandas as pd
 
 
 api = wandb.Api(timeout=19)
-entity, project = 'mizunt', 'sachs_5'
+entity, project = 'mizunt', 'sachs_20'
 def get_runs():
     return api.runs(entity + '/' + project,
         filters={'$and': [{
@@ -17,9 +17,13 @@ def get_runs():
         }]}
     )
 
-methods = ['vbg', 'dag_gflownet', 'dibs', 'dibs +', 'dibs marg', 'bcd', 'causica','ges', 'pc', 'gibbs', 'mh']
-method_str = ['VBG', 'DGFN', 'DiBS', 'DiBS+', 'DiBS M', 'BCD Nets', 'causica',
-                   'BS GES',  'BS PC',  'Gibbs', 'MH']
+#methods = ['vbg', 'dag_gflownet', 'dibs', 'dibs +', 'dibs marg', 'bcd','ges', 'pc', 'gibbs', 'mh']
+#method_str = ['VBG', 'DGFN', 'DiBS', 'DiBS+', 'DiBS M', 'BCD Nets',
+#                   'BS GES',  'BS PC',  'Gibbs', 'MH']
+
+methods = ['vbg', 'dag_gflownet', 'dibs', 'dibs +', 'dibs m', 'bcd','ges', 'pc', 'gibbs', 'mh', 'jsp']
+method_str = ['VBG', 'DGFN', 'DiBS', 'DIBS +', 'DIBS M','BCD Nets',
+                   'BS GES',  'BS PC',  'Gibbs', 'MH', 'JSP']
 
 method_zip = dict((zip(methods, method_str)))
 metrics = ['auroc', 'e-shd']
@@ -55,7 +59,10 @@ for run_ in runs:
         else:
             method = 'ges'
     method = method_zip[method]
-    auroc = run_.summary['metrics/thresholds']['roc_auc']
+    try: 
+        auroc = run_.summary['metrics/thresholds']['roc_auc']
+    except:
+        continue
     shd = run_.summary['metrics/shd/mean']
     seed = inf['seed']['value']
     results['auroc'][method][str(seed)] = auroc
@@ -67,7 +74,7 @@ font = {'family' : 'serif',
         'size'   : 12}
 
 mpl.rc('font', **font)
-fig_path = 'sachs_20'
+fig_path = 'sachs_20_aistats'
 for metric in metrics:
     plt.figure(figsize=(6,5.7), dpi=100)
     plt.clf()

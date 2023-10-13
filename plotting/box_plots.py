@@ -9,8 +9,8 @@ def plot(base_dir, method_path, method_str, ordered_str,fig_path):
     method_dict = dict(zip(method_str, method_path))
     result = "results2"
     df = pd.read_csv(base_dir + '/' + method_path[0], index_col=0)
-    metrics  = ['nll']
-    #metrics = df.columns.to_list()
+    #metrics  = ['nll']
+    metrics = df.columns.to_list()
     dfs = {}
     # for all metrics, put in dataframe with name of method
     for metric in metrics:
@@ -49,20 +49,23 @@ def plot(base_dir, method_path, method_str, ordered_str,fig_path):
         fig.savefig(fig_path +'/' + metric + ".png")
 
 if __name__ == '__main__':
-    nodes_5 = True
+    nodes_5 = False
     if nodes_5:
-        base_dir = '/network/scratch/m/mizu.nishikawa-toomey/sl/n5'
-        methods = ['ges_arxiv2_n5', 'bcd_arxiv2', 'dibs_plus_arxiv2_n5', 'pc_arxiv2_n5', 'dibs_arxiv2_n5', 'gibs_arxiv2_n5',  'mh_arxiv2_n5','vbg_arxiv2_w_0.5']
+        base_dir = 'aistats_5'
+        methods = ['ges_arxiv2_n5', 'bcd_arxiv2', 'dibs_plus_arxiv2_n5', 'pc_arxiv2_n5', 'dibs_arxiv2_n5', 'gibs_arxiv2_n5',  'mh_arxiv2_n5','vbg_arxiv2_w_0.5', 'jsp_5_correct2']
     
         method_path = [method + '.csv' for method in methods]
-        fig_path = 'figs_arxiv2_final_n5'
+        fig_path = 'figs_aistats_n5'
     else:
-        base_dir = '/network/scratch/m/mizu.nishikawa-toomey/sl/n20'
-        method_path = ['ges_arxiv2_n20.csv', 'bcd_arxiv_n20.csv', 'dibs_plus_arxiv2_n20.csv', 'pc_arxiv2_n20.csv', 'dibs_arxiv2_n20.csv', 'gibbs_arxiv2_n20.csv', 'mh_arxiv2_n20.csv','vbg_arxiv2_w_0.5_n20.csv']
-        fig_path = 'figs_arxiv2_n5/'
+        base_dir = 'aistats_20'
+        method_path = ['ges_arxiv2_n20.csv', 'bcd_arxiv_n20.csv',
+                       'dibs_plus_arxiv2_n20.csv', 'pc_arxiv2_n20.csv',
+                       'dibs_arxiv2_n20.csv', 'gibbs_arxiv2_n20.csv', 'mh_arxiv2_n20.csv',
+                       'vbg_arxiv2_w_0.5_n20.csv', 'jsp_20_correct2_long.csv']
+        fig_path = 'figs_aistats_n20/'
 
-    method_str = ['BS GES', 'bcd nets', 'DiBS +', 'BS PC', 'DiBS', 'Gibbs', 'MH', 'VBG']
-    ordered_str = ['VBG', 'DiBS', 'DiBS +', 'bcd nets',
+    method_str = ['BS GES', 'bcd nets', 'DiBS +', 'BS PC', 'DiBS', 'Gibbs', 'MH', 'VBG', 'JSP']
+    ordered_str = ['VBG', 'JSP', 'DiBS', 'DiBS +', 'bcd nets',
                    'BS GES',  'BS PC',  'Gibbs', 'MH']
     #, 'MH_burn', 'MH_theta']
 

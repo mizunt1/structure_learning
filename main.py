@@ -128,6 +128,8 @@ def main(args):
     else:
         # for dibs sampling procedure is not stochastic
         posterior_graphs, posterior_edges, sigmas = model.sample()
+    import pdb
+    pdb.set_trace()
     # save posterior samples
     with open(os.path.join(wandb.run.dir, 'posterior_graphs.npy'), 'wb') as f:
         np.save(f, posterior_graphs)
@@ -445,6 +447,8 @@ if __name__ == '__main__':
         help='Frequency of update for the target network (0 = no target network)')
     jsp_parser.add_argument('--batch_size_data', type=int, default=None,
         help='Batch size for the data (default: %(default)s)')
+    jsp_parser.add_argument('--model_type', type=str, default='lingauss_full',
+        help='mechanism model type (default: %(default)s)')
 
     # Replay buffer
 
