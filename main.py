@@ -128,8 +128,6 @@ def main(args):
     else:
         # for dibs sampling procedure is not stochastic
         posterior_graphs, posterior_edges, sigmas = model.sample()
-    import pdb
-    pdb.set_trace()
     # save posterior samples
     with open(os.path.join(wandb.run.dir, 'posterior_graphs.npy'), 'wb') as f:
         np.save(f, posterior_graphs)
