@@ -5,7 +5,6 @@ This is a repository that includes several Bayesian structure learning methods, 
 
 We wanted to create a centralised repository of Bayesian causal structure learning methods and metrics which are easy to access and use. 
 
-This codebase was used to run experiments for the paper [Bayesian learning of Causal Structure and Mechanisms with GFlowNets and Variational Bayes](https://arxiv.org/abs/2211.02763), but we hope it will be part of a ongoing project to collect causal structure learning algorithms. 
 
 If you have a causal structure learning algorithm which you would like to add to the repository, please feel free to reach to build on the codebase. 
 
