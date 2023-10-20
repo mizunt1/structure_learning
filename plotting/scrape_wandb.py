@@ -54,14 +54,14 @@ def combine_runs(methods, base_dir, nodes_5):
         
 
 if __name__ == '__main__':
-    nodes_5 = False
+    nodes_5 = True
     if nodes_5:
         base_dir = 'aistats_5'
-        methods = ['ges_arxiv2_n5', 'bcd_arxiv2', 'vbg_arxiv3_n5', 'dibs_plus_arxiv2_n5', 'pc_arxiv2_n5', 'dibs_arxiv2_n5', 'gibs_arxiv2_n5',  'mh_arxiv2_n5', 'vbg_arxiv2_w_0.5', 'jsp_5_correct2']
+        methods = ['ges_arxiv2_n5', 'bcd_arxiv2', 'vbg_arxiv3_n5', 'dibs_plus_arxiv2_n5', 'pc_arxiv2_n5', 'dibs_arxiv2_n5', 'gibs_arxiv2_n5',  'mh_arxiv2_n5', 'vbg_arxiv2_w_0.5', 'jsp_5_correct2', 'dag_gfn_5']
 
     else:
         base_dir = 'aistats_20'
-        methods = ['ges_arxiv2_n20', 'bcd_arxiv_n20', 'vbg_arxiv2_w_0.5_n20', 'dibs_plus_arxiv2_n20', 'pc_arxiv2_n20', 'dibs_arxiv2_n20', 'gibbs_arxiv2_n20', 'mh_arxiv2_n20', 'jsp_20', 'jsp_20_correct2_long']
+        methods = ['ges_arxiv2_n20', 'bcd_arxiv_n20', 'vbg_arxiv2_w_0.5_n20', 'dibs_plus_arxiv2_n20', 'pc_arxiv2_n20', 'dibs_arxiv2_n20', 'gibbs_arxiv2_n20', 'mh_arxiv2_n20', 'jsp_20', 'jsp_norm', 'dag_gfn_20']
 
 
     combine_runs(methods, base_dir, nodes_5)

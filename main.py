@@ -86,6 +86,7 @@ def main(args):
             st_dev_test = data_test.to_numpy().std()
             data = (data - mean)/ st_dev
             data_test = (data_test - mean_test) / st_dev_test
+
     if args.graph == 'sachs':
         # http://bioinfo.ipmb.uni-heidelberg.de/crg/seminar-network/bnTutorial.html
         data = pd.read_csv(
@@ -415,8 +416,6 @@ if __name__ == '__main__':
     # Miscellaneous
     dgfn_parser.add_argument('--update_target_every', type=int, default=1000,
         help='Frequency of update for the target network (default: %(default)s)')
-    dgfn_parser.add_argument('--seed', type=int, default=0,
-        help='Random seed (default: %(default)s)')
     dgfn_parser.add_argument('--num_workers', type=int, default=4,
         help='Number of workers (default: %(default)s)')
     dgfn_parser.add_argument('--mp_context', type=str, default='spawn',

@@ -22,7 +22,7 @@ def plot(base_dir, method_path, method_str, ordered_str,fig_path):
             data_for_metric[method] = data.to_list()
         dfs[metric] = pd.DataFrame.from_dict(data_for_metric, orient="index")
 
-
+    
     # sns.set(font="Verdana")
     plt.rcParams["font.family"] = "serif"
     plt.rcParams["mathtext.fontset"] = "dejavuserif"
@@ -32,7 +32,7 @@ def plot(base_dir, method_path, method_str, ordered_str,fig_path):
     mpl.rc('font', **font)
     
     for metric in metrics:
-        
+
         plt.figure(figsize=(6,5.7), dpi=100)
         plt.clf()
         print(metric)
@@ -42,8 +42,12 @@ def plot(base_dir, method_path, method_str, ordered_str,fig_path):
             plot_is = sns.boxplot(data=(dfs[metric].T))
         plt.xticks(rotation=20)
         data = dfs[metric].T
+
         quantiles = data.quantile([0.5, 0.25, 0.75])
         metric = metric.replace(" ", "_")
+        if metric == 'nll':
+            import pdb
+            pdb.set_trace()
         quantiles.to_csv(fig_path + '/' + metric + ".csv")
         fig = plot_is.get_figure()
         fig.savefig(fig_path +'/' + metric + ".png")
@@ -52,20 +56,22 @@ if __name__ == '__main__':
     nodes_5 = False
     if nodes_5:
         base_dir = 'aistats_5'
-        methods = ['ges_arxiv2_n5', 'bcd_arxiv2', 'dibs_plus_arxiv2_n5', 'pc_arxiv2_n5', 'dibs_arxiv2_n5', 'gibs_arxiv2_n5',  'mh_arxiv2_n5','vbg_arxiv2_w_0.5', 'jsp_5_correct2']
+        methods = ['ges_arxiv2_n5', 'bcd_arxiv2', 'dibs_plus_arxiv2_n5', 'pc_arxiv2_n5', 'dibs_arxiv2_n5', 'gibs_arxiv2_n5',  'mh_arxiv2_n5','vbg_arxiv2_w_0.5', 'jsp_5_correct2', 'dag_gfn_5']
     
         method_path = [method + '.csv' for method in methods]
         fig_path = 'figs_aistats_n5'
+        fig_path = 'aistats_5_appendix'
     else:
         base_dir = 'aistats_20'
         method_path = ['ges_arxiv2_n20.csv', 'bcd_arxiv_n20.csv',
                        'dibs_plus_arxiv2_n20.csv', 'pc_arxiv2_n20.csv',
                        'dibs_arxiv2_n20.csv', 'gibbs_arxiv2_n20.csv', 'mh_arxiv2_n20.csv',
-                       'vbg_arxiv2_w_0.5_n20.csv', 'jsp_20_correct2_long.csv']
+                       'vbg_arxiv2_w_0.5_n20.csv', 'jsp_target.csv', 'dag_gfn_20.csv']
         fig_path = 'figs_aistats_n20/'
+        fig_path = 'aistats_20_appendix'
 
-    method_str = ['BS GES', 'bcd nets', 'DiBS +', 'BS PC', 'DiBS', 'Gibbs', 'MH', 'VBG', 'JSP']
-    ordered_str = ['VBG', 'JSP', 'DiBS', 'DiBS +', 'bcd nets',
+    method_str = ['BS GES', 'bcd nets', 'DiBS +', 'BS PC', 'DiBS', 'Gibbs', 'MH', 'VBG', 'JSP', 'DAG-GFN']
+    ordered_str = ['VBG','DAG-GFN', 'JSP','DiBS', 'DiBS +', 'bcd nets',
                    'BS GES',  'BS PC',  'Gibbs', 'MH']
     #, 'MH_burn', 'MH_theta']
 

@@ -2,7 +2,7 @@
 
 This is a repository that includes several Bayesian structure learning methods, data generation from linear Gaussian DAGs, and several metrics to compare their efficacy.
 
-This codebase was developed by [Jithendaraa Subramanian](https://jithendaraa.github.io/) and [Mizu Nishikawa-Toomey](https://mizunt1.github.io/).\
+
 We wanted to create a centralised repository of Bayesian causal structure learning methods and metrics which are easy to access and use. 
 
 This codebase was used to run experiments for the paper [Bayesian learning of Causal Structure and Mechanisms with GFlowNets and Variational Bayes](https://arxiv.org/abs/2211.02763), but we hope it will be part of a ongoing project to collect causal structure learning algorithms. 
