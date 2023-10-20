@@ -1,12 +1,8 @@
 # Bayesian structure learning benchmarks
 
 This is a repository that includes several Bayesian structure learning methods, data generation from linear Gaussian DAGs, and several metrics to compare their efficacy.
+Primarily to compare existing Bayesian causal structure learning algorithms to Variational Bayes GFlowNet.
 
-
-We wanted to create a centralised repository of Bayesian causal structure learning methods and metrics which are easy to access and use. 
-
-
-If you have a causal structure learning algorithm which you would like to add to the repository, please feel free to reach to build on the codebase. 
 
 Set up instructions for creating an environment that works for dibs, vbg and mcmc methods : 
 ```
@@ -28,10 +24,11 @@ To simulate data from a DAG, and to run inference simply run:
 ```
 python main.py <inference model name>
 ```
-See the scripts directory for some slurm scripts on how methods were run on slurm at Mila. 
+
 
 Structure learning methods currently include:
-- [VBG](https://arxiv.org/abs/2211.02763) 
+- [VBG]
+- [JSP](https://arxiv.org/abs/2305.19366)
 - [DIBS](https://arxiv.org/abs/2105.11839)
 - [BCD](https://arxiv.org/abs/2112.02761)
 - MCMC (Metropolis hastings / Gibbs)
