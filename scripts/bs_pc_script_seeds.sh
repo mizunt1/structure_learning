@@ -7,7 +7,7 @@
 #SBATCH --array=2-4
 
 WANDB_API_KEY=$17a113b4804951bde9c66b2002fe378c0209fb64
-WANDB_ENTITY=$mizunt
+
 
 module load singularity/3.7.1
 

@@ -6,7 +6,7 @@
 #SBATCH --mem=10Gb
 
 WANDB_API_KEY=$17a113b4804951bde9c66b2002fe378c0209fb64
-WANDB_ENTITY=$mizunt
+
 module load singularity/3.7.1
 
 singularity exec bs_env.simg python3 main.py --graph sachs --name sachs bs --method ges
