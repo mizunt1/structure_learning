@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --job-name=n20
+#SBATCH --job-name=jspn50
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --time=10:10:00
 #SBATCH --mem=10Gb
-#SBATCH --array=0-19%10
+#SBATCH --array=0-19
 export WANDB_DIR=$SCRATCH/aistats/jobs/$SLURM_ARRAY_JOB_ID
 mkdir -p $WANDB_DIR
 
