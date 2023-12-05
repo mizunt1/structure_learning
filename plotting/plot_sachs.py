@@ -21,9 +21,9 @@ def get_runs():
 #method_str = ['VBG', 'DGFN', 'DiBS', 'DiBS+', 'DiBS M', 'BCD Nets',
 #                   'BS GES',  'BS PC',  'Gibbs', 'MH']
 
-methods = ['vbg', 'dag_gflownet', 'dibs', 'dibs +', 'dibs m', 'bcd','ges', 'pc', 'gibbs', 'mh', 'jsp']
-method_str = ['VBG', 'DGFN', 'DiBS', 'DIBS +', 'DIBS M','BCD Nets',
-                   'BS GES',  'BS PC',  'Gibbs', 'MH', 'JSP']
+methods = ['vbg', 'dag_gflownet', 'jsp_target','dibs', 'dibs +', 'bcd','ges', 'pc', 'gibbs', 'mh']
+method_str = ['VBG','DAG-GFN','JSP', 'DiBS', 'DiBS +','BCD Nets',
+                   'BS GES',  'BS PC',  'Gibbs', 'MH']
 
 method_zip = dict((zip(methods, method_str)))
 metrics = ['auroc', 'e-shd']
@@ -58,6 +58,12 @@ for run_ in runs:
             method = 'pc'
         else:
             method = 'ges'
+    if method == 'jsp':
+        if inf['update_target_every']['value'] == 100:
+            method = 'jsp_target'
+        else:
+            method = 'jsp'
+            continue
     method = method_zip[method]
     try: 
         auroc = run_.summary['metrics/thresholds']['roc_auc']
@@ -65,16 +71,16 @@ for run_ in runs:
         continue
     shd = run_.summary['metrics/shd/mean']
     seed = inf['seed']['value']
+    
     results['auroc'][method][str(seed)] = auroc
     results['e-shd'][method][str(seed)] = shd
-
 plt.rcParams["font.family"] = "serif"
 plt.rcParams["mathtext.fontset"] = "dejavuserif"
 font = {'family' : 'serif',
         'size'   : 12}
 
 mpl.rc('font', **font)
-fig_path = 'sachs_20_aistats'
+fig_path = 'sachs_appendix'
 for metric in metrics:
     plt.figure(figsize=(6,5.7), dpi=100)
     plt.clf()

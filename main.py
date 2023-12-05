@@ -86,6 +86,7 @@ def main(args):
             st_dev_test = data_test.to_numpy().std()
             data = (data - mean)/ st_dev
             data_test = (data_test - mean_test) / st_dev_test
+
     if args.graph == 'sachs':
         # http://bioinfo.ipmb.uni-heidelberg.de/crg/seminar-network/bnTutorial.html
         data = pd.read_csv(

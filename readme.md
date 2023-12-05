@@ -33,6 +33,7 @@ See the scripts directory for some slurm scripts on how methods were run on slur
 
 Structure learning methods currently include:
 - [VBG](https://arxiv.org/abs/2211.02763) 
+- [JSP](https://arxiv.org/abs/2305.19366)
 - [DIBS](https://arxiv.org/abs/2105.11839)
 - [BCD](https://arxiv.org/abs/2112.02761)
 - MCMC (Metropolis hastings / Gibbs)

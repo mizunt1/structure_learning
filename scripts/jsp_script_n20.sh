@@ -9,7 +9,7 @@ export WANDB_DIR=$SCRATCH/aistats/jobs/$SLURM_ARRAY_JOB_ID
 mkdir -p $WANDB_DIR
 
 WANDB_API_KEY=$17a113b4804951bde9c66b2002fe378c0209fb64
-WANDB_ENTITY=$mizunt
+
 module load anaconda/3
 module load cudatoolkit/11.1
 conda activate vbg

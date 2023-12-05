@@ -7,7 +7,7 @@
 #SBATCH --array=0-19%10
 
 WANDB_API_KEY=$17a113b4804951bde9c66b2002fe378c0209fb64
-WANDB_ENTITY=$mizunt
+
 module load anaconda/3
 conda activate vbg
 python main.py --name sachs_20  --graph sachs --seed ${SLURM_ARRAY_TASK_ID} dibs --prior_str er --plus
