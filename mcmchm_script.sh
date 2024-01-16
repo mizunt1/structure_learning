@@ -12,9 +12,11 @@ module load cuda/11.2/cudnn/8.1
 
 python -m venv $SLURM_TMPDIR/venv
 source $SLURM_TMPDIR/venv/bin/activate
-pip install "jax[cuda]==0.4.1" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 pip install --upgrade pip
 
 pip install -r requirements.txt
 pip uninstall -y torch
+pip install optax
+pip install "jax[cuda]==0.4.23" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 python main.py mcmc --method mh
+

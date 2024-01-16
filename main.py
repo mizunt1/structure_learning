@@ -294,8 +294,7 @@ if __name__ == '__main__':
 
     mcmc_parser = subparsers.add_parser('mcmc')
     mcmc_parser.add_argument('--method', choices=['mh', 'gibbs'])
-    bs_parser = subparsers.add_parser('mcmc')
+    bs_parser = subparsers.add_parser('cit')
     bs_parser.add_argument('--method', choices=['ges', 'pc'])
-    mcmc_parser = subparsers.add_parser('mcmc')
     args = parser.parse_args()
     main(args)
