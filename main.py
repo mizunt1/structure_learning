@@ -472,5 +472,7 @@ if __name__ == '__main__':
         help='Number of samples for the posterior estimate (default: %(default)s)')
 
 
+    bs_parser = subparsers.add_parser('cit')
+    bs_parser.add_argument('--method', choices=['ges', 'pc'])
     args = parser.parse_args()
     main(args)
