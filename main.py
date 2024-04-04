@@ -24,7 +24,7 @@ from vbg.gflownet_sl.utils.graph_plot import graph_to_matrix_sachs
 
 # note run with generic then model specific arg parse
 # eg python main.py --num_samples_posterior 100 vbg --num_iterations 2 --num_vb_updates 100
-
+# test
 def main(args):
     wandb.init(
         project=args.name,
