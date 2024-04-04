@@ -112,17 +112,6 @@ class Model:
 
                     pbar.set_postfix(loss=f"{logs['loss']:.2f}")
 
-        # Evaluate the posterior estimate
-        posterior, logs = posterior_estimate(
-            self.gflownet,
-            self.params.online,
-            self.env,
-            key,
-            self.train_jnp,
-            num_samples=self.num_samples_posterior,
-            desc='Sampling from posterior'
-        )
-
     def sample(self, seed):
         key = jax.random.PRNGKey(seed)
         posterior, logs = posterior_estimate(
