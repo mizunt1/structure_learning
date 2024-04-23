@@ -13,7 +13,7 @@ from argparse import ArgumentParser
 import pandas as pd
 
 from pgmpy.utils import get_example_model
-from data_generation import sample_erdos_renyi_linear_gaussian, sample_from_linear_gaussian
+from data_generation import sample_erdos_renyi_linear_gaussian, sample_from_linear_gaussian, sample_scale_free_graph, sample_scale_free_linear_gaussian
 from utils import get_weighted_adjacency, edge_marginal_means
 from vbg.gflownet_sl.utils.wandb_utils import slurm_infos, table_from_dict, scatter_from_dicts, return_ordered_data
 from vbg.gflownet_sl.metrics.metrics import LL, expected_shd, threshold_metrics, expected_edges
@@ -92,7 +92,7 @@ def main(args):
         data = pd.read_csv(
             'data/sachs.data.txt',
             delimiter='\t',
-            dtype=np.float_
+            dtype=np.float
         )
         graph = get_example_model('sachs')
         adj = graph_to_matrix_sachs(graph, data.columns)
@@ -103,6 +103,13 @@ def main(args):
         #data_test = data[0:test_amount]
         #data = data[test_amount:]
         data_test = data
+
+    if args.graph == 'scale_free':
+        graph = sample_scale_free_linear_gaussian(args.num_variables, num_edges=args.num_edges)
+        data = sample_from_linear_gaussian(graph, num_samples=args.num_samples_data, rng=rng)
+        data_test = sample_from_linear_gaussian(graph, num_samples=args.num_samples_data, rng=rng_2)
+        has_edge_weights = True
+
     if args.graph == 'sachs':
         args.num_variables = 11
         args.num_samples_data = len(data)
@@ -269,7 +276,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_edges', type=int, default=5,
         help='Average number of parents (default: %(default)s)')
     parser.add_argument('--graph', type=str, default='erdos_renyi_lingauss',
-                        choices=['erdos_renyi_lingauss', 'sachs'], help='Type of graph (default: %(default)s)')
+                        choices=['erdos_renyi_lingauss', 'sachs', 'scale_free'], help='Type of graph (default: %(default)s)')
     parser.add_argument('--data_obs_noise', type=float, default=0.1,
                         help='likelihood variance in data generation')
     parser.add_argument('--scale_edges', type=float, default=2.0,

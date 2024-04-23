@@ -1,9 +1,11 @@
 import string
 import numpy as np
+import igraph as ig
+
 import networkx as nx
 import pandas as pd
 from pgmpy import models
-from numpy.random import default_rng
+from numpy.random import default_rng, permutation
 from itertools import chain, product, islice, count
 from pgmpy.factors.continuous import LinearGaussianCPD
 from pgmpy.models import LinearGaussianBayesianNetwork
@@ -38,6 +40,21 @@ def sample_erdos_renyi_graph(
     graph = nx.from_numpy_array(adjacency, create_using=create_using)
     mapping = dict(enumerate(nodes))
     nx.relabel_nodes(graph, mapping=mapping, copy=False)
+
+    return graph
+
+def sample_scale_free_graph(num_variables, num_edges, nodes=None, rng=default_rng()):
+    perm = rng.permutation(num_variables).tolist()
+    g = ig.Graph.Barabasi(n=num_variables, m=num_edges, directed=True).permute_vertices(perm)
+    adjacency = np.array(g.get_adjacency().data)
+    graph = nx.from_numpy_array(adjacency, create_using=models.LinearGaussianBayesianNetwork)
+    if nodes is None:
+        uppercase = string.ascii_uppercase
+        iterator = chain.from_iterable(
+            product(uppercase, repeat=r) for r in count(1))
+        nodes = [''.join(letters) for letters in islice(iterator, num_variables)]
+        mapping = dict(enumerate(nodes))
+        nx.relabel_nodes(graph, mapping=mapping, copy=False)
 
     return graph
 
@@ -84,6 +101,44 @@ def sample_erdos_renyi_linear_gaussian(
     graph.add_cpds(*factors)
     return graph
 
+def sample_scale_free_linear_gaussian(
+        num_variables,
+        p=None,
+        num_edges=None,
+        nodes=None,
+        loc_edges=0.0,
+        scale_edges=1.0,
+        low_edges = 0.5,
+        obs_noise=0.1,
+        rng=default_rng(),
+        block_small_theta=False
+    ):
+    # Create graph structure
+    graph = sample_scale_free_graph(
+        num_variables, num_edges,
+        rng=rng)
+    # Create the model parameters
+    factors = []
+    for node in graph.nodes:
+        parents = list(graph.predecessors(node))
+
+        # Sample random parameters (from Normal distribution)
+        if block_small_theta:
+            pos_or_neg = (-1)**(rng.binomial(1, 0.5, size=(len(parents)+1,)))
+            value = rng.uniform(low=low_edges, high=scale_edges, size=(len(parents)+1,))
+            theta = pos_or_neg*value
+                                
+        else:
+            theta = rng.normal(loc_edges, scale_edges, size=(len(parents) + 1,))
+        theta[0] = 0.  # There is no bias term
+
+        # Create factor
+        factor = LinearGaussianCPD(node, theta, obs_noise, parents)
+        factors.append(factor)
+
+    graph.add_cpds(*factors)
+    return graph
+
 def sample_from_linear_gaussian(model, num_samples, rng=default_rng()):
     """Sample from a linear-Gaussian model using ancestral sampling."""
     if not isinstance(model, LinearGaussianBayesianNetwork):
@@ -102,3 +157,4 @@ def sample_from_linear_gaussian(model, num_samples, rng=default_rng()):
             samples[node] = rng.normal(cpd.mean[0], np.sqrt(cpd.variance), size=(num_samples,))
 
     return samples
+
