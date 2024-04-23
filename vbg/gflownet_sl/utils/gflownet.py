@@ -160,7 +160,7 @@ def compute_delta_score_lingauss_full(adjacency, action, params,
         prior_score_after = erdos_renyi_prior(num_variables)[parents_after]
         return  weight * (-0.5 * ((term1 + term2 + term3) / (obs_noise)) - kl_term + prior_score_after - prior_score_before)
     else:
-        return  weight * (-0.5 * (weight*(term1 + term2 + term3) / (obs_noise))  - kl_term)
+        return  weight*(-0.5 * ((term1 + term2 + term3) / (obs_noise)))  - kl_term
 
 
 

@@ -14,14 +14,13 @@ class Model:
         self.args = args
         self.num_samples_posterior = num_samples_posterior
         self.model_obs_noise = model_obs_noise
-        self.method = self.args.method
+        self.method = args.method
         self.rng = None
         self.mcmc_run_params = None
         self.mcmc = None
         self.num_variables = None
         self.burnin = args.burnin
         
-
     def train(self, data, seed):
         self.data = data.to_numpy()
 

@@ -25,6 +25,7 @@ from vbg.gflownet_sl.utils.graph_plot import graph_to_matrix_sachs
 # note run with generic then model specific arg parse
 # eg python main.py --num_samples_posterior 100 vbg --num_iterations 2 --num_vb_updates 100
 
+# test2
 def main(args):
     wandb.init(
         project=args.name,
@@ -309,8 +310,8 @@ if __name__ == '__main__':
                             help='Learning rate (default: %(default)s)')
     vbg_parser.add_argument('--num_vb_updates', type=int, default=2000,
                            help='number of updates to gflownet per one update of parameters in VB setup')
-    vbg_parser.add_argument('--weight', type=float, default=0.5,
-                            help='amount of weighting of reward')
+    vbg_parser.add_argument('--weight', type=float, default=0.1,
+                            help='amount of weighting of likelihood term of reward')
     vbg_parser.add_argument('--delta', type=float, default=1.,
                             help='Value of delta for Huber loss (default: %(default)s)')
     vbg_parser.add_argument('--prefill', type=int, default=1000,
@@ -478,5 +479,7 @@ if __name__ == '__main__':
         help='Number of samples for the posterior estimate (default: %(default)s)')
 
 
+    bs_parser = subparsers.add_parser('cit')
+    bs_parser.add_argument('--method', choices=['ges', 'pc'])
     args = parser.parse_args()
     main(args)

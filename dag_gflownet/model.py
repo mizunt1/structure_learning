@@ -85,19 +85,9 @@ class Model:
                 if iteration >= self.args.prefill:
                     # Update the parameters of the GFlowNet
                     samples = replay.sample(batch_size=self.args.batch_size, rng=rng)
-                    params, state, logs = self.gflownet.step(self.params, state, samples)
+                    self.params, state, logs = self.gflownet.step(self.params, state, samples)
 
                     pbar.set_postfix(loss=f"{logs['loss']:.2f}", epsilon=f"{epsilon:.2f}")
-
-        # Evaluate the posterior estimate
-        posterior, _ = posterior_estimate(
-            self.gflownet,
-            params.online,
-            self.env,
-            key,
-            num_samples=self.args.num_samples_posterior,
-            desc='Sampling from posterior'
-        )
 
     def sample(self, seed):
         key = jax.random.PRNGKey(seed)
