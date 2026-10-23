@@ -9,6 +9,13 @@ This codebase was used to run experiments for the paper [Bayesian learning of Ca
 
 If you have a causal structure learning algorithm which you would like to add to the repository, please feel free to reach to build on the codebase. 
 
+## Environments
+
+The methods do not share a single environment: their dependencies conflict (for example, bcd needs much older versions of jax, numpy and dm-haiku than vbg). Create only the environment for the methods you want to run.
+
+<img width="1097" height="374" alt="Screenshot 2026-10-23 9 42 48 PM" src="https://github.com/user-attachments/assets/bca83e2d-5e2f-4f63-863b-fd2241aaf32d" />
+
+
 Set up instructions for creating an environment that works for dibs, vbg and mcmc methods : 
 ```
 conda create -n envname python=3.10
