@@ -93,7 +93,7 @@ def main(args):
         data = pd.read_csv(
             'data/sachs.data.txt',
             delimiter='\t',
-            dtype=np.float
+            dtype=float
         )
         graph = get_example_model('sachs')
         adj = graph_to_matrix_sachs(graph, data.columns)

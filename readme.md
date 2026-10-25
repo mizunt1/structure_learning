@@ -9,15 +9,15 @@ This codebase was used to run experiments for the paper [Bayesian learning of Ca
 
 If you have a causal structure learning algorithm which you would like to add to the repository, please feel free to reach to build on the codebase. 
 
-Set up instructions for creating an environment that works for dibs, vbg and mcmc methods : 
+Set up instructions for creating an environment that works for dibs, vbg, jsp and mcmc methods : 
 ```
-conda create -n envname python=3.10
-conda activate envname
-conda install jax cuda-nvcc jaxlib==0.4.4=cuda112* cudatoolkit -c conda-forge -c nvidia
-pip install -r requirements.txt
-pip uninstall -y torch
+uv venv --python 3.10 .venvA
+source .venvA/bin/activate
+uv pip install --python .venvA -r requirements.txt
 
 ```
+Use `requirements-gpu.txt` for a GPU environment.
+
 To setup BCD nets:
 ```
 chmod +x scripts/bcd_setup.sh

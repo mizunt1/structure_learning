@@ -4,3 +4,4 @@ venv/
 /wandb/
 *slurm*.out
 *__pycache__*
+.idea
