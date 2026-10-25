@@ -5,9 +5,14 @@ matplotlib==3.7.1
 tqdm==4.65.0
 gym==0.26.2
 pandas==1.5.3
-dm-haiku==0.0.9
+dm-haiku==0.0.11
 networkx==3.0
 scikit-learn==1.2.2
 pgmpy==0.1.21
 optax==0.1.8
 dibs-lib==1.2.1
+scipy==1.11.4
+setuptools<70
+jax==0.4.20
+jaxlib==0.4.20
+jraph==0.0.6.dev0
